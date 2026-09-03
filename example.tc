@@ -1,0 +1,14 @@
+// Conceptual Syntax
+// the idea is to act like rust with a more simplistic syntax, like lua or python: my original vision for TCode
+fn process_data(mut standard_list: List[int]) {
+    standard_list.append(42)
+    // The borrow ends automatically when the function scope closes
+  }
+
+fn main() {
+    let my_list = [1, 2, 3]          // Immutable by default like in rust
+    let mut managed_list = [4, 5, 6] // Mutability requires it to be explicitely written
+
+    process_data(mut managed_list)   // Borrow checker ensures exclusive access
+    print(managed_list)              // Borrow ends after function is done so it is safe to use here
+}
