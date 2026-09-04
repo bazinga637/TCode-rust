@@ -2,12 +2,27 @@
 mod lexer;
 use lexer::lex;
 
+mod process_tokens;
+use process_tokens::process_tokens;
+
+mod parser;
+use parser::Parser;
+
 use std::fs;
 
 fn main() {
-    let content: String = fs::read_to_string("example.tc")
+    let source_code: String = fs::read_to_string("example.tc")
         .expect("Failed to read the file");
 
-    let lexed_contnet: Vec<String> = lex(content);
-    println!("{:?}", lexed_contnet);
+    let tokens: Vec<String> = lex(source_code);
+    println!("lexed: {:?}", tokens);
+
+    let tokens = process_tokens(tokens);
+    println!("processed: {:?}", tokens);
+
+    let mut parser = Parser::new(tokens);
+
+    let ast = parser.parse_program();
+
+    println!("parsed: {:#?}", ast);
 }
