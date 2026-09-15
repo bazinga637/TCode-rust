@@ -1,0 +1,67 @@
+[
+    Jump(
+        6,
+    ),
+    PushNumber(
+        42.0,
+    ),
+    GetLocal(
+        0,
+    ),
+    CallMethod {
+        name: "append",
+        arg_count: 1,
+    },
+    Pop,
+    Return,
+    Jump(
+        24,
+    ),
+    PushNumber(
+        1.0,
+    ),
+    PushNumber(
+        2.0,
+    ),
+    PushNumber(
+        3.0,
+    ),
+    BuildArray(
+        3,
+    ),
+    SetLocal(
+        0,
+    ),
+    PushNumber(
+        4.0,
+    ),
+    PushNumber(
+        5.0,
+    ),
+    PushNumber(
+        6.0,
+    ),
+    BuildArray(
+        3,
+    ),
+    SetLocal(
+        1,
+    ),
+    GetLocal(
+        1,
+    ),
+    CallFunction {
+        name: "process_data",
+        arg_count: 1,
+    },
+    Pop,
+    GetLocal(
+        1,
+    ),
+    CallFunction {
+        name: "print",
+        arg_count: 1,
+    },
+    Pop,
+    Return,
+]
