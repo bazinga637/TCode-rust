@@ -11,6 +11,8 @@ use compiler::Compiler;
 mod vm; // assuming you named the vm module file vm.rs or vm/mod.rs
 use vm::VirtualMachine;
 
+mod nativefns;
+
 use std::fs;
 
 
@@ -42,21 +44,35 @@ fn main() {
 
     print_info_before("Compiling AST to Bytecode");
     
-    let mut compiler = Compiler::new(); // Or BytecodeCompiler::new()
+    let mut compiler = Compiler::new();
+    // Force register native names in the global scope so they are valid identifiers
+    compiler.scopes[0].variables.insert("print".to_string(), 9999); // Use a sentinel or unique index mapping
+    compiler.scopes[0].variables.insert("len".to_string(), 9998);
+
     compiler.compile_program(&ast);
     let bytecode = compiler.bytecode;
 
     print_info_after("Compiling AST to Bytecode", None);
     let _ = log(&bytecode);
 
+    let native_functions = nativefns::get_native_registry();
+    let user_functions = compiler.function_registry;
+
     print_info_before("Executing Virtual Machine");
 
-    let mut virtual_machine = VirtualMachine::new(bytecode);
+    // 🌟 2. Pass the registry map straight into your VM constructor
+    let mut virtual_machine = VirtualMachine::new(bytecode, native_functions, user_functions);
+
+    if let Some(&main_address) = virtual_machine.user_functions.get("main") {
+        virtual_machine.ip = main_address; // Points the VM directly to instruction index 7 instead of 0!
+    } else {
+        panic!("Runtime Error: No 'main' function was found in the compiled TCode program.");
+    }
+
     virtual_machine.run();
 
-    print_info_after("Executing Virtual Machine", None);
+    //print_info_after("Executing Virtual Machine", None);
 
-    
 }
 
 fn print_info_before(process: &str) {

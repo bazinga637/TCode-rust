@@ -11,4 +11,11 @@ fn main() {
 
     process_data(mut managed_list)   // Borrow checker ensures exclusive access
     print(managed_list)              // Borrow ends after function is done so it is safe to use here
+
+    print(return_test())
+}
+
+fn return_test() {
+  let return_value = 5
+  return return_value
 }

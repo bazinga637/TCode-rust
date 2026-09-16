@@ -305,13 +305,12 @@ impl Parser {
                         }
                         self.advance(); // consume type tokens like "List[int]"
                     }
-                
-                let param: ExpressionNode = ExpressionNode{ span: start_span, kind: Expression::Variable{ name: param_name, is_mutable } };
-                params.push(param);
-
-                // break if there's no comma separating the next parameter
-                if !self.match_token(",") { break; }
                 }
+            let param: ExpressionNode = ExpressionNode{ span: start_span, kind: Expression::Variable{ name: param_name, is_mutable } };
+            params.push(param);
+
+            // break if there's no comma separating the next parameter
+            if !self.match_token(",") { break; }
             }
         }
 

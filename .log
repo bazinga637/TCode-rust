@@ -1,6 +1,6 @@
 [
     Jump(
-        6,
+        7,
     ),
     PushNumber(
         42.0,
@@ -13,9 +13,10 @@
         arg_count: 1,
     },
     Pop,
+    PushNil,
     Return,
     Jump(
-        24,
+        29,
     ),
     PushNumber(
         1.0,
@@ -63,5 +64,30 @@
         arg_count: 1,
     },
     Pop,
+    CallFunction {
+        name: "return_test",
+        arg_count: 0,
+    },
+    CallFunction {
+        name: "print",
+        arg_count: 1,
+    },
+    Pop,
+    PushNil,
+    Return,
+    Jump(
+        36,
+    ),
+    PushNumber(
+        5.0,
+    ),
+    SetLocal(
+        0,
+    ),
+    GetLocal(
+        0,
+    ),
+    Return,
+    PushNil,
     Return,
 ]
