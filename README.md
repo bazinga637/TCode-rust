@@ -1,0 +1,1 @@
+i aint writing all this yet

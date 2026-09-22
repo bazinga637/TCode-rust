@@ -26,18 +26,15 @@ impl Lexer {
             column: 1,
         }
     }
-
-    // Look at the character under the cursor without consuming it
+    // see current token without consuming it
     fn peek(&self) -> Option<char> {
         self.chars.get(self.index).copied()
     }
-
-    // Look two steps ahead (helpful to find "//" comments)
+    // see next token without consuming any tokens
     fn peek_next(&self) -> Option<char> {
         self.chars.get(self.index + 1).copied()
     }
-
-    // Step forward and safely update coordinates
+    // consumes current token
     fn advance(&mut self) -> Option<char> {
         let current_char = self.peek()?;
         self.index += 1;
@@ -51,8 +48,7 @@ impl Lexer {
 
         Some(current_char)
     }
-
-    // Entrypoint: Generates a vector of rich tokens
+    // main lexer logic
     pub fn lex(mut self) -> Vec<Token> {
         let symbols = vec!['(', ')', '{', '}', '\n', '*', '+', '-', '=', '|', ':', '.', ',', '[', ']'];
         let ignored_chars = vec![' ', '\t', '\r'];
@@ -63,13 +59,10 @@ impl Lexer {
 
         while let Some(c) = self.peek() {
             
-            // If we hit a double slash '//', consume until the end of the line
+            // handle comments ('//')
             if c == '/' && self.peek_next() == Some('/') {
-    
-                self.advance(); // consume both slashes
+                self.advance(); 
                 self.advance();
-                
-                // Skip everything up to the newline
                 while let Some(comment_char) = self.peek() {
                     if comment_char == '\n' { break; }
                     self.advance();
@@ -87,7 +80,6 @@ impl Lexer {
 
             // --- 3. Handle Ignored Whitespace ---
             if ignored_chars.contains(&c) {
-                // If we were building a word/number, flush it before skipping space
                 if !current_str.is_empty() {
                     tokens.push(Token { value: current_str.clone(), span: word_start_span });
                     current_str.clear();
@@ -96,40 +88,88 @@ impl Lexer {
                 continue;
             }
 
-            // --- 4. Handle Dedicated Symbols ---
-            if symbols.contains(&c) {
-                // Flush accumulated word buffer first
+            // handle string literals ('...' or "...")
+            if c == '"' || c == '\'' {
                 if !current_str.is_empty() {
                     tokens.push(Token { value: current_str.clone(), span: word_start_span });
                     current_str.clear();
                 }
 
-                // Snap the exact position of this single-character symbol
+                let string_start_span = Span { line: self.line, column: self.column };
+                let quote_char = self.advance().unwrap(); 
+                let mut string_literal = String::new();
+                
+                string_literal.push(quote_char); 
+
+                while let Some(inner_c) = self.peek() {
+                    if inner_c == quote_char {
+                        break;
+                    }
+                    string_literal.push(self.advance().unwrap());
+                }
+
+                if self.peek() == Some(quote_char) {
+                    string_literal.push(self.advance().unwrap());
+                }
+
+                tokens.push(Token {
+                    value: string_literal,
+                    span: string_start_span,
+                });
+                continue;
+            }
+            
+            // handles comparisons and match statement thick arrows (=>)
+            if c == '=' || c == '<' || c == '!' || c == '>' {
+                if !current_str.is_empty() {
+                    tokens.push(Token { value: current_str.clone(), span: word_start_span });
+                    current_str.clear();
+                }
+
+                let comparison_start_span = Span { line: self.line, column: self.column };
+                let starting_char = self.advance().unwrap();
+                let mut sequence = starting_char.to_string();
+
+                // Check for multi-character sequences like ==, <=, >=, != or =>
+                if (starting_char == '=' && self.peek() == Some('>')) || self.peek() == Some('=') {
+                    sequence.push(self.advance().unwrap());
+                }
+
+                tokens.push(Token {
+                    value: sequence,
+                    span: comparison_start_span,
+                });
+                continue;
+            }
+
+            // handle symbols
+            if symbols.contains(&c) {
+                if !current_str.is_empty() {
+                    tokens.push(Token { value: current_str.clone(), span: word_start_span });
+                    current_str.clear();
+                }
+
                 let symbol_span = Span { line: self.line, column: self.column };
                 let sym = self.advance().unwrap();
 
-                // If you don't want newlines inside your final parser array, skip pushing it
                 if sym != '\n' {
                     tokens.push(Token { value: sym.to_string(), span: symbol_span });
                 }
                 continue;
             }
 
-            // --- 5. Accumulate Identifiers, Keywords, and Literals ---
+            // accumulate identifiers, keywords, and literals
             if current_str.is_empty() {
-                // Mark the starting block coordinate of this multi-character token
                 word_start_span = Span { line: self.line, column: self.column };
             }
 
             current_str.push(c);
             self.advance();
 
-            // Check if keywords are split directly without spacing (e.g. `letx` should be an identifier, but your code checked exact string matches)
-            // To emulate your exact custom keyword-flushing strategy safely:
-            if current_str == "fn" || current_str == "let" || current_str == "mut" {
-                // Look ahead to check if the keyword is ending or part of a bigger word like "let_variable"
+            // Intercept 'match' to prevent greedy string blending (e.g., matching 'match_variable')
+            if current_str == "fn" || current_str == "let" || current_str == "mut" || current_str == "match" {
                 if let Some(next) = self.peek() {
-                    if ignored_chars.contains(&next) || symbols.contains(&next) || next == '/' {
+                    if ignored_chars.contains(&next) || symbols.contains(&next) || next == '/' || next == '=' || next == '<' || next == '>' || next == '!' {
                         tokens.push(Token { value: current_str.clone(), span: word_start_span });
                         current_str.clear();
                     }
@@ -137,11 +177,9 @@ impl Lexer {
             }
         }
 
-        // Catch lingering values remaining in the buffers at the end of the text file
         if !current_str.is_empty() {
             tokens.push(Token { value: current_str, span: word_start_span });
         }
-
         tokens
     }
 }

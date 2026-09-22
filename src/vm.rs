@@ -79,12 +79,21 @@ impl VirtualMachine {
                 }
                 
                 OpCode::Add => {
-                    let r = self.stack.pop().unwrap();
-                    let l = self.stack.pop().unwrap();
-                    if let (RuntimeValue::Number(a), RuntimeValue::Number(b)) = (l, r) {
-                        self.stack.push(RuntimeValue::Number(a + b));
+                    let r = self.stack.pop().expect("VM Error: Add right operand missing");
+                    let l = self.stack.pop().expect("VM Error: Add left operand missing");
+                    
+                    match (l, r) {
+                        (RuntimeValue::Number(a), RuntimeValue::Number(b)) => {
+                            self.stack.push(RuntimeValue::Number(a + b));
+                        }
+                        (RuntimeValue::String(mut a), RuntimeValue::String(b)) => {
+                            a.push_str(&b);
+                            self.stack.push(RuntimeValue::String(a));
+                        }
+                        _ => panic!("Runtime Error: Invalid operand types profile for binary addition (+) operation."),
                     }
                 }
+
                 
                 OpCode::Sub => {
                     let r = self.stack.pop().unwrap();
@@ -146,37 +155,63 @@ impl VirtualMachine {
                     }
                     items.reverse(); 
                     
-                    // 🌟 Wrap the generated vec in Rc::new(RefCell::new(...))
+                    // Wrap the generated vec in Rc::new(RefCell::new(...))
                     self.stack.push(RuntimeValue::Array(Rc::new(RefCell::new(items))));
                 }
 
                 OpCode::CallMethod { name, arg_count } => {
-                    // 1. 🌟 FIXED: Pop the object context FIRST because it's sitting on top of the stack
-                    let obj = self.stack.pop().expect("VM Error: Missing object context");
-
-                    // 2. Pop the arguments sitting underneath it
+                    // 1. Pop the arguments sitting on TOP of the stack first
                     let mut args = Vec::new();
                     for _ in 0..arg_count {
                         args.push(self.stack.pop().expect("VM Error: Missing argument for method call"));
                     }
-                    // Since we pop leftwards down the stack, reverse them to preserve source order
                     args.reverse(); 
 
-                    // 3. Execute the operation on your Rc<RefCell> pointer type
+                    // 2. NOW the object context is sitting at the top of the stack. Pop it!
+                    let obj = self.stack.pop().expect("VM Error: Missing object context");
+
                     match (obj, name.as_str()) {
                         (RuntimeValue::Array(list_ptr), "append") => {
                             let append_value = args.first().expect("Runtime Error: Missing argument for append").clone();
-                            
-                            // Mutate the array directly in shared memory
                             list_ptr.borrow_mut().push(append_value);
-                            
-                            // Push Nil back to keep the compiler's following Pop instruction happy
                             self.stack.push(RuntimeValue::Nil); 
-                        }
+                        },
+                        
+                        (RuntimeValue::Array(list_ptr), "get") => {
+                            if let Some(RuntimeValue::Number(idx_float)) = args.first() {
+                                let idx = *idx_float as usize;
+                                let list = list_ptr.borrow();
+                                
+                                if idx >= list.len() {
+                                    panic!("Runtime Error: Array index out of bounds tracking {} on length {}", idx, list.len());
+                                }
+                                
+                                let value = list[idx].clone();
+                                self.stack.push(value); 
+                            } else {
+                                panic!("Runtime Error: .get() method requires a numeric index.");
+                            }
+                        },
+
+                        (RuntimeValue::String(source_str), "get") => {
+                            if let Some(RuntimeValue::Number(idx_float)) = args.first() {
+                                let idx = *idx_float as usize;
+                                
+                                if idx >= source_str.len() {
+                                    panic!("Runtime Error: String index out of bounds tracking {} on length {}", idx, source_str.len());
+                                }
+                                
+                                let target_char = source_str.chars().nth(idx).unwrap().to_string();
+                                self.stack.push(RuntimeValue::String(target_char));
+                            } else {
+                                panic!("Runtime Error: .get() method on a string requires a numeric index.");
+                            }
+                        },
+
                         _ => panic!("Runtime Error: Method call failed or undefined method on target. Found type profile mismatch."),
                     }
                 }
-
+                
                 OpCode::Jump(target) => {
                     self.ip = target;
                 }
@@ -201,7 +236,7 @@ impl VirtualMachine {
 
                         let mut local_workspace = vec![RuntimeValue::Nil; 256];
                         
-                        // 🌟 Ensure right-to-left popping places the first parameter at index 0
+                        // Ensure right-to-left popping places the first parameter at index 0
                         for i in (0..arg_count).rev() {
                             local_workspace[i] = self.stack.pop().expect("VM Error: Missing function argument");
                         }
@@ -220,17 +255,16 @@ impl VirtualMachine {
                     if self.frames.len() <= 1 {
                         break; // End execution if we return out of the main script file scope
                     }
-
-                    // 1. Grab the computed return value (or the placeholder Nil) off the top of the stack
+                    // Grab the computed return value (or the placeholder Nil) off the top of the stack
                     let return_value = self.stack.pop().expect("VM Error: Return statement stack underflow");
 
-                    // 2. Pop the completed function frame off our call stack to restore the caller's layout
+                    // Pop the completed function frame off our call stack to restore the caller's layout
                     let completed_frame = self.frames.pop().expect("VM Error: Frame stack underflow");
                     
-                    // 3. Teleport our instruction pointer back to exactly where the caller left off
+                    // Teleport our instruction pointer back to exactly where the caller left off
                     self.ip = completed_frame.return_address;
 
-                    // 4. Push the return value BACK onto the stack so the caller frame can read it
+                    // Push the return value BACK onto the stack so the caller frame can read it
                     self.stack.push(return_value);
                 }
             }

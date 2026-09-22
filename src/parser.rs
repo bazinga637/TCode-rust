@@ -27,7 +27,13 @@ pub enum Statement {
         condition: ExpressionNode,
         body: Box<StatementNode>,
     },
-    
+
+    For {
+        item_name: String,
+        iterable: ExpressionNode,
+        body: Box<StatementNode>,
+    },
+
     // fn name(a, b) { body }
     FunctionDeclaration {
         name: String,
@@ -43,6 +49,18 @@ pub enum Statement {
     
     // A standalone expression acting as a statement (e.g., calling print(x);)
     Expression(ExpressionNode),
+
+    Match {
+        target: ExpressionNode,
+        cases: Vec<MatchCase>,
+        default_branch: Option<Box<StatementNode>>,
+    },
+}
+
+#[derive(Debug, Clone)]
+pub struct MatchCase {
+    pub pattern: ExpressionNode, // The value to compare against (e.g. "what", 5, true)
+    pub body: Box<StatementNode>, // The statement or block code execution path
 }
 
 #[derive(Debug, Clone)]
@@ -56,7 +74,7 @@ pub enum Expression {
         is_mutable: bool,
     },
     
-     // 🌟 Clean property tracking (e.g., standard_list . append)
+     // Clean property tracking (e.g., standard_list . append)
     Get {
         object: Box<ExpressionNode>,
         name: String,
@@ -95,7 +113,7 @@ pub enum LiteralValue {
 #[derive(Debug, Clone)]
 pub enum BinaryOperator {
     Add, Sub, Mul, Div,               // Math
-    Equal, NotEqual, LessThan, GreaterThan, // Comparison
+    Equal, NotEqual, LessThan, GreaterThan, LessEqual, GreaterEqual, // Comparison
     And, Or,                          // Logic
 }
 
@@ -187,7 +205,9 @@ impl Parser {
             match token {
                 "let" => self.parse_var_declaration(),
                 "if" => self.parse_if_statement(),
+                "match" => self.parse_match_statement(),
                 "while" => self.parse_while_loop(),
+                "for" => self.parse_for_loop(),
                 "fn" => self.parse_function_declaration(),
                 "return" => self.parse_return_statement(),
                 "{" => self.parse_block_statement(),
@@ -241,6 +261,7 @@ impl Parser {
         assert!(self.match_token("("), "Expected '(' after 'if'");
 
         let condition = self.parse();
+        
         assert!(self.match_token(")"), "Expected ')' after if condition");
         
         let then_branch = Box::new(self.parse_statement());
@@ -252,6 +273,50 @@ impl Parser {
         StatementNode {
             span: start_span,
             kind: Statement::If { condition, then_branch, else_branch },
+        }
+    }
+
+    fn parse_match_statement(&mut self) -> StatementNode {
+        let start_span = self.peek_span();
+        self.advance(); // consume "match"
+
+        assert!(self.match_token("("), "Expected '(' after 'match' keyword");
+        let target = self.parse(); // Parse the evaluation expression target
+        assert!(self.match_token(")"), "Expected ')' after match target expression");
+
+        assert!(self.match_token("{"), "Expected '{{' to open match block wrapper");
+
+        let mut cases = Vec::new();
+        let mut default_branch = None;
+
+        while self.peek() != Some("}") {
+            // Check for the wildcard catch-all pattern "_"
+            if self.peek() == Some("_") {
+                self.advance(); // consume "_"
+                assert!(self.match_token("=>"), "Expected '=>' thick arrow after fallback pattern '_'");
+                
+                default_branch = Some(Box::new(self.parse_statement()));
+                continue;
+            }
+
+            // Parse normal value patterns (e.g., "what", 5, or true)
+            let pattern = self.parse();
+            assert!(self.match_token("=>"), "Expected '=>' thick arrow after match pattern condition");
+            
+            let body = if self.peek() == Some("{") {
+                Box::new(self.parse_block_statement())
+            } else {
+                Box::new(self.parse_statement())
+            };
+
+            cases.push(MatchCase { pattern, body });
+        }
+
+        assert!(self.match_token("}"), "Expected '}}' to close match block execution frame");
+
+        StatementNode {
+            span: start_span,
+            kind: Statement::Match { target, cases, default_branch },
         }
     }
 
@@ -272,6 +337,28 @@ impl Parser {
         }
     }
 
+    fn parse_for_loop(&mut self) -> StatementNode {
+        let start_span = self.peek_span();
+        self.advance(); // Consume "for"
+
+        // 1. Capture the iteration variable name
+        let item_token = self.advance().expect("Expected variable name after 'for'");
+        let item_name = item_token.value;
+
+        // 2. Ensure "in" keyword is present
+        assert!(self.match_token("in"), "Expected 'in' keyword after variable name in for loop");
+
+        // 3. Parse the array collection/iterable expression
+        let iterable = self.parse();
+
+        // 4. Capture the executable body statements block
+        let body = Box::new(self.parse_statement());
+
+        StatementNode {
+            span: start_span,
+            kind: Statement::For { item_name, iterable, body },
+        }
+    }
 
     // Parses: fn my_func ( mut a : Type , b ) { ... }
     fn parse_function_declaration(&mut self) -> StatementNode {
@@ -389,7 +476,37 @@ impl Parser {
     }
 
     // --- Expression Processing Rules ---
-    pub fn parse(&mut self) -> ExpressionNode { self.parse_additive() }
+    pub fn parse(&mut self) -> ExpressionNode { self.parse_comparison() }
+
+    fn parse_comparison(&mut self) -> ExpressionNode {
+        let mut left = self.parse_additive();
+
+        while let Some(token) = self.peek() {
+            let operator = match token {
+                "==" => BinaryOperator::Equal,
+                "!=" => BinaryOperator::NotEqual,
+                "<" => BinaryOperator::LessThan,
+                ">" => BinaryOperator::GreaterThan,
+                "<=" => BinaryOperator::LessEqual,
+                ">=" => BinaryOperator::GreaterEqual,
+                _ => break,
+            };
+
+            let start_span = left.span;
+            self.advance(); // Consume the comparison operator token
+            let right = self.parse_additive();
+
+            left = ExpressionNode {
+                span: start_span,
+                kind: Expression::Binary {
+                    operator,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                },
+            };
+        }
+        left
+    }
 
     fn parse_additive(&mut self) -> ExpressionNode {
         let mut left = self.parse_multiplicative();
@@ -511,6 +628,42 @@ impl Parser {
             return ExpressionNode {
                 span: start_span,
                 kind: Expression::Literal(LiteralValue::Number(number)),
+            };
+        }
+        // will parse strings as literals ("a", 'a')
+        if (token.starts_with('"') && token.ends_with('"')) || (token.starts_with('\'') && token.ends_with('\'')) {
+            assert!(!is_mutable, "Cannot apply 'mut' modifier to a string literal");
+            
+            // Extract the inside text by stripping out the bounding quotes
+            let inner_value = token[1..token.len() - 1].to_string();
+            
+            return ExpressionNode {
+                span: start_span,
+                kind: Expression::Literal(LiteralValue::String(inner_value)),
+            };
+        }
+
+        if token == "true" {
+            assert!(!is_mutable, "Cannot apply 'mut' modifier to a boolean literal");
+            return ExpressionNode {
+                span: start_span,
+                kind: Expression::Literal(LiteralValue::Boolean(true)),
+            };
+        }
+
+        if token == "false" {
+            assert!(!is_mutable, "Cannot apply 'mut' modifier to a boolean literal");
+            return ExpressionNode {
+                span: start_span,
+                kind: Expression::Literal(LiteralValue::Boolean(false)),
+            };
+        }
+        
+        if token == "nil" || token == "null" {
+            assert!(!is_mutable, "Cannot apply 'mut' modifier to a nil literal");
+            return ExpressionNode {
+                span: start_span,
+                kind: Expression::Literal(LiteralValue::Nil),
             };
         }
 

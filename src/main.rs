@@ -8,21 +8,37 @@ use parser::Parser;
 mod compiler;
 use compiler::Compiler;
 
-mod vm; // assuming you named the vm module file vm.rs or vm/mod.rs
+mod vm;
 use vm::VirtualMachine;
 
 mod nativefns;
 
 use std::fs;
 
+use std::env;
 
 fn main() {
+    let _ = File::create(".log"); // wipes log file after each run
 
-    print_info_before("Getting source code");
-    let source_code = fs::read_to_string("example.tc")
-        .expect("Failed to read the file");
+    // collect all command-line arguments passed to the program
+    let args: Vec<String> = env::args().collect();
 
-    print_info_after("Getting source code", None);
+    // check if a filename was actually provided
+    // args[0] is always the path to the compiler executable itself. 
+    // args[1] will be the user's input file path.
+    if args.len() < 2 {
+        println!("Usage: cargo run <filename.tc>");
+        std::process::exit(1); // Stop execution early if filename is missing
+    }
+
+    let target_filename = &args[1]; // Grab the specified file path string
+
+    print_info_before(&format!("Getting source code from {}", target_filename));
+    
+    let source_code = fs::read_to_string(target_filename)
+        .unwrap_or_else(|_| panic!("Failed to read the file: {}", target_filename));
+
+    print_info_after("Getting source code", None); 
 
     let _ = log(&source_code);
 
@@ -44,35 +60,25 @@ fn main() {
 
     print_info_before("Compiling AST to Bytecode");
     
-    let mut compiler = Compiler::new();
-    // Force register native names in the global scope so they are valid identifiers
-    compiler.scopes[0].variables.insert("print".to_string(), 9999); // Use a sentinel or unique index mapping
-    compiler.scopes[0].variables.insert("len".to_string(), 9998);
-
-    compiler.compile_program(&ast);
-    let bytecode = compiler.bytecode;
+    let (bytecode, user_functions) = Compiler::compile(&ast);
 
     print_info_after("Compiling AST to Bytecode", None);
+    
     let _ = log(&bytecode);
 
     let native_functions = nativefns::get_native_registry();
-    let user_functions = compiler.function_registry;
 
-    print_info_before("Executing Virtual Machine");
-
-    // 🌟 2. Pass the registry map straight into your VM constructor
+    println!("Executing program...");
+    // pass the registry map straight into the VM constructor
     let mut virtual_machine = VirtualMachine::new(bytecode, native_functions, user_functions);
 
     if let Some(&main_address) = virtual_machine.user_functions.get("main") {
-        virtual_machine.ip = main_address; // Points the VM directly to instruction index 7 instead of 0!
+        virtual_machine.ip = main_address; // makes the VM start at 'main' function
     } else {
         panic!("Runtime Error: No 'main' function was found in the compiled TCode program.");
     }
 
     virtual_machine.run();
-
-    //print_info_after("Executing Virtual Machine", None);
-
 }
 
 fn print_info_before(process: &str) {
@@ -94,14 +100,16 @@ fn print_info_after(process: &str, error: Option<std::io::Error>) {
 
 use std::fs::File;
 use std::io::Write;
+use std::fs::OpenOptions;
 
 fn log<T: std::fmt::Debug>(content: &T) -> std::io::Result<()> {
 
-    let mut file = File::create(".log")?; // creates .log file or erases an already existing .log file
+    let mut file = OpenOptions::new()
+        .append(true) // Sets append mode
+        .open(".log")?;
 
     // makes newlines actually appear instead of showing "\n"
     let clean_content = format!("{:#?}", content).replace("\\n", "\n");
-
 
     file.write_all(clean_content.as_bytes())?; // writes to log file
 

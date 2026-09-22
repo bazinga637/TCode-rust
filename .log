@@ -1,75 +1,1059 @@
-[
+"fn main() {
+    
+    let reply = ask()
+    respond(reply)
+}
+
+fn respond(reply) {
+     if (reply == \"what\") {
+            print(\"chicken butt\")
+            print(\"BAHAHAHHA\")
+    } else {
+            print(\"you're supposed to say 'what'\")
+            let reply = ask()
+            respond(reply)
+    }
+}
+
+fn ask() {
+    print(\"guess what\")
+
+    let reply = readline()
+
+    reply
+}"[
+    Token {
+        value: "fn",
+        span: Span {
+            line: 1,
+            column: 1,
+        },
+    },
+    Token {
+        value: "main",
+        span: Span {
+            line: 1,
+            column: 4,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 1,
+            column: 8,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 1,
+            column: 9,
+        },
+    },
+    Token {
+        value: "{",
+        span: Span {
+            line: 1,
+            column: 11,
+        },
+    },
+    Token {
+        value: "let",
+        span: Span {
+            line: 3,
+            column: 5,
+        },
+    },
+    Token {
+        value: "reply",
+        span: Span {
+            line: 3,
+            column: 9,
+        },
+    },
+    Token {
+        value: "=",
+        span: Span {
+            line: 3,
+            column: 15,
+        },
+    },
+    Token {
+        value: "ask",
+        span: Span {
+            line: 3,
+            column: 17,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 3,
+            column: 20,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 3,
+            column: 21,
+        },
+    },
+    Token {
+        value: "respond",
+        span: Span {
+            line: 4,
+            column: 5,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 4,
+            column: 12,
+        },
+    },
+    Token {
+        value: "reply",
+        span: Span {
+            line: 4,
+            column: 13,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 4,
+            column: 18,
+        },
+    },
+    Token {
+        value: "}",
+        span: Span {
+            line: 5,
+            column: 1,
+        },
+    },
+    Token {
+        value: "fn",
+        span: Span {
+            line: 7,
+            column: 1,
+        },
+    },
+    Token {
+        value: "respond",
+        span: Span {
+            line: 7,
+            column: 4,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 7,
+            column: 11,
+        },
+    },
+    Token {
+        value: "reply",
+        span: Span {
+            line: 7,
+            column: 12,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 7,
+            column: 17,
+        },
+    },
+    Token {
+        value: "{",
+        span: Span {
+            line: 7,
+            column: 19,
+        },
+    },
+    Token {
+        value: "if",
+        span: Span {
+            line: 8,
+            column: 6,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 8,
+            column: 9,
+        },
+    },
+    Token {
+        value: "reply",
+        span: Span {
+            line: 8,
+            column: 10,
+        },
+    },
+    Token {
+        value: "==",
+        span: Span {
+            line: 8,
+            column: 16,
+        },
+    },
+    Token {
+        value: "\"what\"",
+        span: Span {
+            line: 8,
+            column: 19,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 8,
+            column: 25,
+        },
+    },
+    Token {
+        value: "{",
+        span: Span {
+            line: 8,
+            column: 27,
+        },
+    },
+    Token {
+        value: "print",
+        span: Span {
+            line: 9,
+            column: 13,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 9,
+            column: 18,
+        },
+    },
+    Token {
+        value: "\"chicken butt\"",
+        span: Span {
+            line: 9,
+            column: 19,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 9,
+            column: 33,
+        },
+    },
+    Token {
+        value: "print",
+        span: Span {
+            line: 10,
+            column: 13,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 10,
+            column: 18,
+        },
+    },
+    Token {
+        value: "\"BAHAHAHHA\"",
+        span: Span {
+            line: 10,
+            column: 19,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 10,
+            column: 30,
+        },
+    },
+    Token {
+        value: "}",
+        span: Span {
+            line: 11,
+            column: 5,
+        },
+    },
+    Token {
+        value: "else",
+        span: Span {
+            line: 11,
+            column: 7,
+        },
+    },
+    Token {
+        value: "{",
+        span: Span {
+            line: 11,
+            column: 12,
+        },
+    },
+    Token {
+        value: "print",
+        span: Span {
+            line: 12,
+            column: 13,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 12,
+            column: 18,
+        },
+    },
+    Token {
+        value: "\"you're supposed to say 'what'\"",
+        span: Span {
+            line: 12,
+            column: 19,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 12,
+            column: 50,
+        },
+    },
+    Token {
+        value: "let",
+        span: Span {
+            line: 13,
+            column: 13,
+        },
+    },
+    Token {
+        value: "reply",
+        span: Span {
+            line: 13,
+            column: 17,
+        },
+    },
+    Token {
+        value: "=",
+        span: Span {
+            line: 13,
+            column: 23,
+        },
+    },
+    Token {
+        value: "ask",
+        span: Span {
+            line: 13,
+            column: 25,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 13,
+            column: 28,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 13,
+            column: 29,
+        },
+    },
+    Token {
+        value: "respond",
+        span: Span {
+            line: 14,
+            column: 13,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 14,
+            column: 20,
+        },
+    },
+    Token {
+        value: "reply",
+        span: Span {
+            line: 14,
+            column: 21,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 14,
+            column: 26,
+        },
+    },
+    Token {
+        value: "}",
+        span: Span {
+            line: 15,
+            column: 5,
+        },
+    },
+    Token {
+        value: "}",
+        span: Span {
+            line: 16,
+            column: 1,
+        },
+    },
+    Token {
+        value: "fn",
+        span: Span {
+            line: 18,
+            column: 1,
+        },
+    },
+    Token {
+        value: "ask",
+        span: Span {
+            line: 18,
+            column: 4,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 18,
+            column: 7,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 18,
+            column: 8,
+        },
+    },
+    Token {
+        value: "{",
+        span: Span {
+            line: 18,
+            column: 10,
+        },
+    },
+    Token {
+        value: "print",
+        span: Span {
+            line: 19,
+            column: 5,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 19,
+            column: 10,
+        },
+    },
+    Token {
+        value: "\"guess what\"",
+        span: Span {
+            line: 19,
+            column: 11,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 19,
+            column: 23,
+        },
+    },
+    Token {
+        value: "let",
+        span: Span {
+            line: 21,
+            column: 5,
+        },
+    },
+    Token {
+        value: "reply",
+        span: Span {
+            line: 21,
+            column: 9,
+        },
+    },
+    Token {
+        value: "=",
+        span: Span {
+            line: 21,
+            column: 15,
+        },
+    },
+    Token {
+        value: "readline",
+        span: Span {
+            line: 21,
+            column: 17,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 21,
+            column: 25,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 21,
+            column: 26,
+        },
+    },
+    Token {
+        value: "reply",
+        span: Span {
+            line: 23,
+            column: 5,
+        },
+    },
+    Token {
+        value: "}",
+        span: Span {
+            line: 24,
+            column: 1,
+        },
+    },
+]Program {
+    body: [
+        StatementNode {
+            span: Span {
+                line: 1,
+                column: 1,
+            },
+            kind: FunctionDeclaration {
+                name: "main",
+                params: [],
+                body: [
+                    StatementNode {
+                        span: Span {
+                            line: 3,
+                            column: 5,
+                        },
+                        kind: VarDeclaration {
+                            name: "reply",
+                            var_type: "Undeclared",
+                            initializer: ExpressionNode {
+                                span: Span {
+                                    line: 3,
+                                    column: 17,
+                                },
+                                kind: Call {
+                                    callee: ExpressionNode {
+                                        span: Span {
+                                            line: 3,
+                                            column: 17,
+                                        },
+                                        kind: Variable {
+                                            name: "ask",
+                                            is_mutable: false,
+                                        },
+                                    },
+                                    arguments: [],
+                                },
+                            },
+                            is_mutable: false,
+                        },
+                    },
+                    StatementNode {
+                        span: Span {
+                            line: 4,
+                            column: 5,
+                        },
+                        kind: Expression(
+                            ExpressionNode {
+                                span: Span {
+                                    line: 4,
+                                    column: 5,
+                                },
+                                kind: Call {
+                                    callee: ExpressionNode {
+                                        span: Span {
+                                            line: 4,
+                                            column: 5,
+                                        },
+                                        kind: Variable {
+                                            name: "respond",
+                                            is_mutable: false,
+                                        },
+                                    },
+                                    arguments: [
+                                        ExpressionNode {
+                                            span: Span {
+                                                line: 4,
+                                                column: 13,
+                                            },
+                                            kind: Variable {
+                                                name: "reply",
+                                                is_mutable: false,
+                                            },
+                                        },
+                                    ],
+                                },
+                            },
+                        ),
+                    },
+                ],
+            },
+        },
+        StatementNode {
+            span: Span {
+                line: 7,
+                column: 1,
+            },
+            kind: FunctionDeclaration {
+                name: "respond",
+                params: [
+                    ExpressionNode {
+                        span: Span {
+                            line: 7,
+                            column: 1,
+                        },
+                        kind: Variable {
+                            name: "reply",
+                            is_mutable: false,
+                        },
+                    },
+                ],
+                body: [
+                    StatementNode {
+                        span: Span {
+                            line: 8,
+                            column: 6,
+                        },
+                        kind: If {
+                            condition: ExpressionNode {
+                                span: Span {
+                                    line: 8,
+                                    column: 10,
+                                },
+                                kind: Binary {
+                                    operator: Equal,
+                                    left: ExpressionNode {
+                                        span: Span {
+                                            line: 8,
+                                            column: 10,
+                                        },
+                                        kind: Variable {
+                                            name: "reply",
+                                            is_mutable: false,
+                                        },
+                                    },
+                                    right: ExpressionNode {
+                                        span: Span {
+                                            line: 8,
+                                            column: 19,
+                                        },
+                                        kind: Literal(
+                                            String(
+                                                "what",
+                                            ),
+                                        ),
+                                    },
+                                },
+                            },
+                            then_branch: StatementNode {
+                                span: Span {
+                                    line: 8,
+                                    column: 27,
+                                },
+                                kind: Block(
+                                    [
+                                        StatementNode {
+                                            span: Span {
+                                                line: 9,
+                                                column: 13,
+                                            },
+                                            kind: Expression(
+                                                ExpressionNode {
+                                                    span: Span {
+                                                        line: 9,
+                                                        column: 13,
+                                                    },
+                                                    kind: Call {
+                                                        callee: ExpressionNode {
+                                                            span: Span {
+                                                                line: 9,
+                                                                column: 13,
+                                                            },
+                                                            kind: Variable {
+                                                                name: "print",
+                                                                is_mutable: false,
+                                                            },
+                                                        },
+                                                        arguments: [
+                                                            ExpressionNode {
+                                                                span: Span {
+                                                                    line: 9,
+                                                                    column: 19,
+                                                                },
+                                                                kind: Literal(
+                                                                    String(
+                                                                        "chicken butt",
+                                                                    ),
+                                                                ),
+                                                            },
+                                                        ],
+                                                    },
+                                                },
+                                            ),
+                                        },
+                                        StatementNode {
+                                            span: Span {
+                                                line: 10,
+                                                column: 13,
+                                            },
+                                            kind: Expression(
+                                                ExpressionNode {
+                                                    span: Span {
+                                                        line: 10,
+                                                        column: 13,
+                                                    },
+                                                    kind: Call {
+                                                        callee: ExpressionNode {
+                                                            span: Span {
+                                                                line: 10,
+                                                                column: 13,
+                                                            },
+                                                            kind: Variable {
+                                                                name: "print",
+                                                                is_mutable: false,
+                                                            },
+                                                        },
+                                                        arguments: [
+                                                            ExpressionNode {
+                                                                span: Span {
+                                                                    line: 10,
+                                                                    column: 19,
+                                                                },
+                                                                kind: Literal(
+                                                                    String(
+                                                                        "BAHAHAHHA",
+                                                                    ),
+                                                                ),
+                                                            },
+                                                        ],
+                                                    },
+                                                },
+                                            ),
+                                        },
+                                    ],
+                                ),
+                            },
+                            else_branch: Some(
+                                StatementNode {
+                                    span: Span {
+                                        line: 11,
+                                        column: 12,
+                                    },
+                                    kind: Block(
+                                        [
+                                            StatementNode {
+                                                span: Span {
+                                                    line: 12,
+                                                    column: 13,
+                                                },
+                                                kind: Expression(
+                                                    ExpressionNode {
+                                                        span: Span {
+                                                            line: 12,
+                                                            column: 13,
+                                                        },
+                                                        kind: Call {
+                                                            callee: ExpressionNode {
+                                                                span: Span {
+                                                                    line: 12,
+                                                                    column: 13,
+                                                                },
+                                                                kind: Variable {
+                                                                    name: "print",
+                                                                    is_mutable: false,
+                                                                },
+                                                            },
+                                                            arguments: [
+                                                                ExpressionNode {
+                                                                    span: Span {
+                                                                        line: 12,
+                                                                        column: 19,
+                                                                    },
+                                                                    kind: Literal(
+                                                                        String(
+                                                                            "you're supposed to say 'what'",
+                                                                        ),
+                                                                    ),
+                                                                },
+                                                            ],
+                                                        },
+                                                    },
+                                                ),
+                                            },
+                                            StatementNode {
+                                                span: Span {
+                                                    line: 13,
+                                                    column: 13,
+                                                },
+                                                kind: VarDeclaration {
+                                                    name: "reply",
+                                                    var_type: "Undeclared",
+                                                    initializer: ExpressionNode {
+                                                        span: Span {
+                                                            line: 13,
+                                                            column: 25,
+                                                        },
+                                                        kind: Call {
+                                                            callee: ExpressionNode {
+                                                                span: Span {
+                                                                    line: 13,
+                                                                    column: 25,
+                                                                },
+                                                                kind: Variable {
+                                                                    name: "ask",
+                                                                    is_mutable: false,
+                                                                },
+                                                            },
+                                                            arguments: [],
+                                                        },
+                                                    },
+                                                    is_mutable: false,
+                                                },
+                                            },
+                                            StatementNode {
+                                                span: Span {
+                                                    line: 14,
+                                                    column: 13,
+                                                },
+                                                kind: Expression(
+                                                    ExpressionNode {
+                                                        span: Span {
+                                                            line: 14,
+                                                            column: 13,
+                                                        },
+                                                        kind: Call {
+                                                            callee: ExpressionNode {
+                                                                span: Span {
+                                                                    line: 14,
+                                                                    column: 13,
+                                                                },
+                                                                kind: Variable {
+                                                                    name: "respond",
+                                                                    is_mutable: false,
+                                                                },
+                                                            },
+                                                            arguments: [
+                                                                ExpressionNode {
+                                                                    span: Span {
+                                                                        line: 14,
+                                                                        column: 21,
+                                                                    },
+                                                                    kind: Variable {
+                                                                        name: "reply",
+                                                                        is_mutable: false,
+                                                                    },
+                                                                },
+                                                            ],
+                                                        },
+                                                    },
+                                                ),
+                                            },
+                                        ],
+                                    ),
+                                },
+                            ),
+                        },
+                    },
+                ],
+            },
+        },
+        StatementNode {
+            span: Span {
+                line: 18,
+                column: 1,
+            },
+            kind: FunctionDeclaration {
+                name: "ask",
+                params: [],
+                body: [
+                    StatementNode {
+                        span: Span {
+                            line: 19,
+                            column: 5,
+                        },
+                        kind: Expression(
+                            ExpressionNode {
+                                span: Span {
+                                    line: 19,
+                                    column: 5,
+                                },
+                                kind: Call {
+                                    callee: ExpressionNode {
+                                        span: Span {
+                                            line: 19,
+                                            column: 5,
+                                        },
+                                        kind: Variable {
+                                            name: "print",
+                                            is_mutable: false,
+                                        },
+                                    },
+                                    arguments: [
+                                        ExpressionNode {
+                                            span: Span {
+                                                line: 19,
+                                                column: 11,
+                                            },
+                                            kind: Literal(
+                                                String(
+                                                    "guess what",
+                                                ),
+                                            ),
+                                        },
+                                    ],
+                                },
+                            },
+                        ),
+                    },
+                    StatementNode {
+                        span: Span {
+                            line: 21,
+                            column: 5,
+                        },
+                        kind: VarDeclaration {
+                            name: "reply",
+                            var_type: "Undeclared",
+                            initializer: ExpressionNode {
+                                span: Span {
+                                    line: 21,
+                                    column: 17,
+                                },
+                                kind: Call {
+                                    callee: ExpressionNode {
+                                        span: Span {
+                                            line: 21,
+                                            column: 17,
+                                        },
+                                        kind: Variable {
+                                            name: "readline",
+                                            is_mutable: false,
+                                        },
+                                    },
+                                    arguments: [],
+                                },
+                            },
+                            is_mutable: false,
+                        },
+                    },
+                    StatementNode {
+                        span: Span {
+                            line: 23,
+                            column: 5,
+                        },
+                        kind: Expression(
+                            ExpressionNode {
+                                span: Span {
+                                    line: 23,
+                                    column: 5,
+                                },
+                                kind: Variable {
+                                    name: "reply",
+                                    is_mutable: false,
+                                },
+                            },
+                        ),
+                    },
+                ],
+            },
+        },
+    ],
+}[
     Jump(
-        7,
-    ),
-    PushNumber(
-        42.0,
-    ),
-    GetLocal(
-        0,
-    ),
-    CallMethod {
-        name: "append",
-        arg_count: 1,
-    },
-    Pop,
-    PushNil,
-    Return,
-    Jump(
-        29,
-    ),
-    PushNumber(
-        1.0,
-    ),
-    PushNumber(
-        2.0,
-    ),
-    PushNumber(
-        3.0,
-    ),
-    BuildArray(
-        3,
-    ),
-    SetLocal(
-        0,
-    ),
-    PushNumber(
-        4.0,
-    ),
-    PushNumber(
-        5.0,
-    ),
-    PushNumber(
-        6.0,
-    ),
-    BuildArray(
-        3,
-    ),
-    SetLocal(
-        1,
-    ),
-    GetLocal(
-        1,
+        6,
     ),
     CallFunction {
-        name: "process_data",
-        arg_count: 1,
-    },
-    Pop,
-    GetLocal(
-        1,
-    ),
-    CallFunction {
-        name: "print",
-        arg_count: 1,
-    },
-    Pop,
-    CallFunction {
-        name: "return_test",
+        name: "ask",
         arg_count: 0,
     },
+    SetLocal(
+        0,
+    ),
+    GetLocal(
+        0,
+    ),
+    CallFunction {
+        name: "respond",
+        arg_count: 1,
+    },
+    Return,
+    Jump(
+        28,
+    ),
+    GetLocal(
+        0,
+    ),
+    PushString(
+        "what",
+    ),
+    Equal,
+    JumpIfFalse(
+        18,
+    ),
+    PushString(
+        "chicken butt",
+    ),
     CallFunction {
         name: "print",
+        arg_count: 1,
+    },
+    Pop,
+    PushString(
+        "BAHAHAHHA",
+    ),
+    CallFunction {
+        name: "print",
+        arg_count: 1,
+    },
+    Pop,
+    Jump(
+        26,
+    ),
+    PushString(
+        "you're supposed to say 'what'",
+    ),
+    CallFunction {
+        name: "print",
+        arg_count: 1,
+    },
+    Pop,
+    CallFunction {
+        name: "ask",
+        arg_count: 0,
+    },
+    SetLocal(
+        0,
+    ),
+    GetLocal(
+        0,
+    ),
+    CallFunction {
+        name: "respond",
         arg_count: 1,
     },
     Pop,
@@ -78,16 +1062,23 @@
     Jump(
         36,
     ),
-    PushNumber(
-        5.0,
+    PushString(
+        "guess what",
     ),
+    CallFunction {
+        name: "print",
+        arg_count: 1,
+    },
+    Pop,
+    CallFunction {
+        name: "readline",
+        arg_count: 0,
+    },
     SetLocal(
         0,
     ),
     GetLocal(
         0,
     ),
-    Return,
-    PushNil,
     Return,
 ]
