@@ -1,0 +1,24 @@
+fn main() {
+    
+    let reply = ask()
+    respond(reply)
+}
+
+fn respond(reply) {
+     if (reply == "what") {
+            print("chicken butt")
+            print("BAHAHAHHA")
+    } else {
+            print("you're supposed to say 'what'")
+            let reply = ask()
+            respond(reply)
+    }
+}
+
+fn ask() {
+    print("guess what")
+
+    let reply = readline()
+
+    reply
+}

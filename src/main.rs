@@ -12,6 +12,7 @@ mod vm;
 use vm::VirtualMachine;
 
 mod nativefns;
+mod nativemthds; 
 
 use std::fs;
 
@@ -67,10 +68,17 @@ fn main() {
     let _ = log(&bytecode);
 
     let native_functions = nativefns::get_native_registry();
+    let native_methods = nativemthds::get_native_method_registry(); 
+
 
     println!("Executing program...");
     // pass the registry map straight into the VM constructor
-    let mut virtual_machine = VirtualMachine::new(bytecode, native_functions, user_functions);
+    let mut virtual_machine = VirtualMachine::new(
+        bytecode,
+        native_functions, 
+        native_methods,
+        user_functions,
+    );
 
     if let Some(&main_address) = virtual_machine.user_functions.get("main") {
         virtual_machine.ip = main_address; // makes the VM start at 'main' function

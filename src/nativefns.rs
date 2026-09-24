@@ -16,6 +16,8 @@ pub fn get_native_registry() -> HashMap<String, NativeFn> {
     registry.insert("len".to_string(), native_len);
     registry.insert("split".to_string(), native_split);
     registry.insert("to_number".to_string(), native_to_number);
+    registry.insert("panic".to_string(), native_panic);
+    
     registry
 }
 
@@ -123,5 +125,13 @@ fn native_to_number(args: &[RuntimeValue]) -> RuntimeValue {
         }
         Some(RuntimeValue::Number(n)) => RuntimeValue::Number(*n), // Already a number, return it
         _ => panic!("Runtime Error: to_number() expects a string or number argument."),
+    }
+}
+
+fn native_panic(args: &[RuntimeValue]) -> RuntimeValue {
+    if let Some(RuntimeValue::String(msg)) = args.first() {
+        panic!("User Program Panic: {}", msg);
+    } else {
+        panic!("User Program Panic: (No error message provided)");
     }
 }

@@ -1,0 +1,49 @@
+1. Clarify the purposes.
+
+    The purpose of this project is to make an actually useful general programming language
+    by writing the compiler in rust.
+
+2. Define the deliverables.
+
+    The deliverable will be a working compiler of my new language that will take a code input
+    and execute it, giving the output.
+
+3. Specify time lines.
+
+    Less than a month. Since I'm going to be going back and forth between each program I can't
+    really say when any part is going to be done. I will work linearly at first, making the lexer,
+    then the parser and so on.
+
+4. Explain terminology, tools, and processes.
+
+    First, the source code of my new language will need to be lexed: turned into tokens of
+    data to be later organized. I will then need to funnel the tokens from the lexer into a 
+    parser, which will structure the tokens and label them accordingly into an Abstract Syntax Tree. 
+    After the parser, the AST is then pushed to the compiler which will translate the tree into
+    linear instructions. These linear instructions are then executed by the virtual machine,
+    running the program. Along the way I will use metadata on the tokens from the lexer and items
+    in the AST to be able to detect the line and column in which an error occured in the script.
+
+5. Define resources; e.g., materials, costs, staffing.
+
+    the only resources I need is myself, a computer, and a rust compiler
+
+6. Identify how this project course connects to two or more other CTS courses.
+
+    I'm working with different file types like in File Structures course
+    as well as the second language course because this is in my second computer language
+
+7. Identify and comply with all related health and safety standards.
+
+    There aren't really any health stuff but when it comes to safety and corruption prevention
+    I am using a borrow checker just like in rust to prevent errors at runtime that helps detect
+    errors before they are run and risk corruption.
+
+8. Define indicators for success.
+
+    An indicator is if I can write a small program in my code and it will run correctly and without
+    errors.
+
+9. Present the proposal and obtain necessary approvals.
+
+    I do not need approval, right?👀👀.

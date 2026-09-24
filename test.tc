@@ -1,0 +1,47 @@
+
+fn main() {
+    
+    test_to_number()
+    test_append()
+    test_string_addition()
+    test_unary()
+
+}
+// test native functions
+
+fn test_to_number() {
+    let x = "1"
+    let y = to_number(x).expect("to_number function failed")
+}
+
+// test native methods
+
+fn test_append() {
+    let mut x = []
+    let y = "a"
+    let z = 1
+    x.append(y)
+    x.append(z)
+    if (x != ["a", 1]) {
+        panic("TestError: append method failed")
+    }
+}
+
+// test operations
+
+fn test_string_addition() {
+    let x = "hello"
+    let y = " world"
+    if (x+y != "hello world") {
+        panic("TestError: String Addition failed.")
+    }
+}
+
+fn test_unary() {
+    let x = -1
+    if (-x != 1) {
+        panic("TestError: NegUnary failed.")
+    }
+    let x = false
+    !x.expect("TestError: NotUnary failed.")
+}

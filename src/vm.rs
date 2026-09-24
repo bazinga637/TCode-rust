@@ -10,6 +10,7 @@ pub struct VirtualMachine {
     stack: Vec<RuntimeValue>,
     frames: Vec<CallFrame>, 
     natives: HashMap<String, NativeFn>, 
+    native_methods: HashMap<String, crate::nativemthds::NativeMethodFn>, 
     // 🌟 Added: Map function names to their bytecode entry addresses
     pub user_functions: HashMap<String, usize>, 
 }
@@ -34,6 +35,7 @@ impl VirtualMachine {
     pub fn new(
         bytecode: Vec<OpCode>, 
         natives: HashMap<String, NativeFn>,
+        native_methods: HashMap<String, crate::nativemthds::NativeMethodFn>, 
         user_functions: HashMap<String, usize>
     ) -> Self {
         let global_frame = CallFrame {
@@ -47,6 +49,7 @@ impl VirtualMachine {
             stack: Vec::new(),
             frames: vec![global_frame],
             natives,
+            native_methods, 
             user_functions,
         }
     }
@@ -76,6 +79,24 @@ impl VirtualMachine {
                 
                 OpCode::Pop => {
                     self.stack.pop().expect("VM Error: Pop stack underflow");
+                }
+
+                OpCode::Negate => {
+                    let val = self.stack.pop().expect("VM Error: Negate operand missing");
+                    if let RuntimeValue::Number(n) = val {
+                        self.stack.push(RuntimeValue::Number(-n));
+                    } else {
+                        panic!("Runtime Error: Negation (-) can only be applied to numeric type values.");
+                    }
+                }
+
+                OpCode::Not => {
+                    let val = self.stack.pop().expect("VM Error: Not operand missing");
+                    if let RuntimeValue::Boolean(b) = val {
+                        self.stack.push(RuntimeValue::Boolean(!b));
+                    } else {
+                        panic!("Runtime Error: Logical NOT (!) can only be applied to boolean type values.");
+                    }
                 }
                 
                 OpCode::Add => {
@@ -170,45 +191,11 @@ impl VirtualMachine {
                     // 2. NOW the object context is sitting at the top of the stack. Pop it!
                     let obj = self.stack.pop().expect("VM Error: Missing object context");
 
-                    match (obj, name.as_str()) {
-                        (RuntimeValue::Array(list_ptr), "append") => {
-                            let append_value = args.first().expect("Runtime Error: Missing argument for append").clone();
-                            list_ptr.borrow_mut().push(append_value);
-                            self.stack.push(RuntimeValue::Nil); 
-                        },
-                        
-                        (RuntimeValue::Array(list_ptr), "get") => {
-                            if let Some(RuntimeValue::Number(idx_float)) = args.first() {
-                                let idx = *idx_float as usize;
-                                let list = list_ptr.borrow();
-                                
-                                if idx >= list.len() {
-                                    panic!("Runtime Error: Array index out of bounds tracking {} on length {}", idx, list.len());
-                                }
-                                
-                                let value = list[idx].clone();
-                                self.stack.push(value); 
-                            } else {
-                                panic!("Runtime Error: .get() method requires a numeric index.");
-                            }
-                        },
-
-                        (RuntimeValue::String(source_str), "get") => {
-                            if let Some(RuntimeValue::Number(idx_float)) = args.first() {
-                                let idx = *idx_float as usize;
-                                
-                                if idx >= source_str.len() {
-                                    panic!("Runtime Error: String index out of bounds tracking {} on length {}", idx, source_str.len());
-                                }
-                                
-                                let target_char = source_str.chars().nth(idx).unwrap().to_string();
-                                self.stack.push(RuntimeValue::String(target_char));
-                            } else {
-                                panic!("Runtime Error: .get() method on a string requires a numeric index.");
-                            }
-                        },
-
-                        _ => panic!("Runtime Error: Method call failed or undefined method on target. Found type profile mismatch."),
+                    if let Some(method_fn) = self.native_methods.get(&name) {
+                        let result = method_fn(&obj, &args);
+                        self.stack.push(result); 
+                    } else {
+                        panic!("Runtime Error: Undefined method or type profile mismatch for '.{}()'", name);
                     }
                 }
                 

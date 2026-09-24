@@ -20,6 +20,8 @@ pub enum OpCode {
     // Evaluation Commands
     Add, Sub, Mul, Div,
     Equal, NotEqual, LessThan, GreaterThan,
+    Negate, // -x
+    Not,    // !x
     Pop, // Cleans the stack after a standalone expression statement
     
     // Structures
@@ -138,7 +140,6 @@ impl Compiler {
                     span
                 );
             }
-                        println!("DEBUG [Line {}, Col {}]: Requesting {:?} borrow on '{}'. Active loans: {:?}", span.line, span.column, borrow_kind, source_name, metadata.active_loans);
 
             for active_loan in &metadata.active_loans {
                 match (active_loan.kind, borrow_kind) {
@@ -193,9 +194,10 @@ impl Compiler {
     pub fn compile(program: &Program) -> (Vec<OpCode>, HashMap<String, usize>) {
         let mut compiler = Compiler::new();
 
-        let native_fns_list = ["print", "readline", "len", "split", "to_number"];
-        for (index, item) in native_fns_list.iter().enumerate() {
-            // 🌟 Updated: Insert native hooks as read-only global entries
+        let native_functions = crate::nativefns::get_native_registry();
+
+        for (index, item) in native_functions.keys().enumerate() {
+            // Insert native hooks as read-only global entries
             compiler.scopes[0].variables.insert(item.to_string(), VariableMetadata {
                 slot: 9999 - index,
                 is_mutable: false,
@@ -588,7 +590,7 @@ impl Compiler {
 
                 self.pop_scope();
 
-                // 🌟 Implicit Loop Hook: Release container lock when loop concludes
+                // Implicit Loop Hook: Release container lock when loop concludes
                 if let Some(var_name) = source_iterable_var {
                     if let Some(meta) = self.resolve_variable_metadata_mut(&var_name) {
                         meta.active_loans.retain(|l| l.provider_name != var_name);
@@ -641,10 +643,26 @@ impl Compiler {
                     BinaryOperator::Mul => { self.emit(OpCode::Mul); }
                     BinaryOperator::Div => { self.emit(OpCode::Div); }
                     BinaryOperator::Equal => { self.emit(OpCode::Equal); }
+                    BinaryOperator::NotEqual => { self.emit(OpCode::NotEqual); }
                     BinaryOperator::LessThan => { self.emit(OpCode::LessThan); }
                     BinaryOperator::GreaterThan => { self.emit(OpCode::GreaterThan); }
                     _ => todo!(),
                 };
+            }
+
+            Expression::Unary { operator, right } => {
+                // 1. Compile the inner expression onto the stack first
+                self.compile_expression(right);
+                
+                // 2. Emit the correct modification opcode based on the operator type
+                match operator {
+                    crate::parser::UnaryOperator::Minus => {
+                        self.emit(OpCode::Negate);
+                    }
+                    crate::parser::UnaryOperator::Not => {
+                        self.emit(OpCode::Not);
+                    }
+                }
             }
             
             Expression::Array(elements) => {
@@ -657,7 +675,7 @@ impl Compiler {
             Expression::Call { callee, arguments } => {
                 // --- PATHWAY A: Method Calls (e.g., x.append(y)) ---
                 if let Expression::Get { object, name } = &callee.kind {
-                    let is_mutating_method = name == "append" || name == "clear" || name == "remove";
+                    let is_mutating_method = crate::nativemthds::is_mutating_method(name);
 
                     if let Expression::Variable { name: obj_name, .. } = &object.kind {
                         if is_mutating_method {
@@ -668,7 +686,7 @@ impl Compiler {
                             self.borrow_variable(obj_name, BorrowKind::Shared, expr.span);
                         }
 
-                        // 🌟 FIX: Manually emit GetLocal for the variable object instead of 
+                        // Manually emit GetLocal for the variable object instead of 
                         // calling compile_expression. This cuts off double-borrowing panics!
                         if let Some(slot) = self.resolve_local(obj_name) {
                             self.emit(OpCode::GetLocal(slot));

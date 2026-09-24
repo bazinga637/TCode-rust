@@ -508,6 +508,36 @@ impl Parser {
         left
     }
 
+    // Intercepts preceding '-' or '!' symbols before diving into literals
+    fn parse_unary(&mut self) -> ExpressionNode {
+        if let Some(token) = self.peek() {
+            let operator = match token {
+                "-" => Some(UnaryOperator::Minus),
+                "!" => Some(UnaryOperator::Not),
+                _ => None,
+            };
+
+            if let Some(op) = operator {
+                let start_span = self.peek_span();
+                self.advance(); // Consume the operator symbol token
+                
+                // Recursively call parse_unary to correctly support chained elements like !!true
+                let right = self.parse_unary(); 
+                
+                return ExpressionNode {
+                    span: start_span,
+                    kind: Expression::Unary {
+                        operator: op,
+                        right: Box::new(right),
+                    },
+                };
+            }
+        }
+        
+        // Fallback naturally to raw numbers/variables if no prefix matches
+        self.parse_primary()
+    }
+
     fn parse_additive(&mut self) -> ExpressionNode {
         let mut left = self.parse_multiplicative();
         while let Some(token) = self.peek() {
@@ -549,7 +579,7 @@ impl Parser {
     }
 
     fn parse_call_or_member(&mut self) -> ExpressionNode {
-        let mut expr = self.parse_primary();
+        let mut expr = self.parse_unary();
 
         loop {
             let start_span = expr.span;
