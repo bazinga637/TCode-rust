@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+use crate::parser::{Program, StatementNode, Statement, ExpressionNode, Expression, LiteralValue, BinaryOperator};
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Ownership {
     Owned,
     SharedBorrow,
     MutableBorrow,
 }
-
 
 #[derive(Debug, Clone)]
 pub enum OpCode {
@@ -36,11 +38,6 @@ pub enum OpCode {
     Return,
 
 }
-
-// compiler/mod.rs
-// compiler/mod.rs
-use std::collections::HashMap;
-use crate::parser::{Program, StatementNode, Statement, ExpressionNode, Expression, LiteralValue, BinaryOperator};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BorrowKind {
@@ -531,7 +528,7 @@ impl Compiler {
                 let hidden_idx_name = format!("$idx_{}", self.bytecode.len());
                 let hidden_list_name = format!("$list_{}", self.bytecode.len());
                 
-                // Implicit Loop Hook: If the container is a variable, register a shared lease
+                // If the container is a variable, register a shared lease
                 let mut source_iterable_var = None;
                 if let Expression::Variable { name: var_name, .. } = &iterable.kind {
                     source_iterable_var = Some(var_name.clone());
@@ -540,7 +537,7 @@ impl Compiler {
 
                 self.push_scope();
 
-                // --- STEP A: Initializers ---
+                // --- Initializers ---
                 self.compile_expression(iterable);
                 let list_slot = self.locals_count;
                 self.locals_count += 1;
@@ -553,7 +550,7 @@ impl Compiler {
                 self.insert_variable_metadata(hidden_idx_name.clone(), idx_slot, true);
                 self.emit(OpCode::SetLocal(idx_slot));
 
-                // --- STEP B: Loop Condition Guard ---
+                // --- Loop Condition Guard ---
                 let loop_start_ip = self.bytecode.len();
                 self.emit(OpCode::GetLocal(idx_slot));
                 
@@ -563,7 +560,7 @@ impl Compiler {
 
                 let jump_false_ip = self.emit(OpCode::JumpIfFalse(0));
 
-                // --- STEP C: Inner Loop Workspace ---
+                // --- Inner Loop Workspace ---
                 let item_slot = self.locals_count;
                 self.locals_count += 1;
                 self.insert_variable_metadata(item_name.clone(), item_slot, false);
@@ -575,7 +572,7 @@ impl Compiler {
 
                 self.compile_statement(body);
 
-                // --- STEP D: Loop Counter Increment ---
+                // --- Loop Counter Increment ---
                 self.emit(OpCode::GetLocal(idx_slot));
                 self.emit(OpCode::PushNumber(1.0));
                 self.emit(OpCode::Add);
@@ -590,7 +587,7 @@ impl Compiler {
 
                 self.pop_scope();
 
-                // Implicit Loop Hook: Release container lock when loop concludes
+                // Release container lock when loop concludes
                 if let Some(var_name) = source_iterable_var {
                     if let Some(meta) = self.resolve_variable_metadata_mut(&var_name) {
                         meta.active_loans.retain(|l| l.provider_name != var_name);
@@ -600,14 +597,13 @@ impl Compiler {
 
             Statement::Return(maybe_expr) => {
                 if let Some(expr) = maybe_expr {
-                    // 1. If an expression exists (e.g., return 5;), compile it onto the evaluation stack
+                    // If an expression exists compile it onto the evaluation stack
                     self.compile_expression(expr);
                 } else {
-                    // 2. If it's a blank return (e.g., return;), push Nil onto the stack as a placeholder
+                    // If it's a blank return push Nil onto the stack as a placeholder
                     self.emit(OpCode::PushNil);
                 }
                 
-                // 3. Emit the Return instruction to break execution out of the current call frame
                 self.emit(OpCode::Return);
             }
 
@@ -651,10 +647,10 @@ impl Compiler {
             }
 
             Expression::Unary { operator, right } => {
-                // 1. Compile the inner expression onto the stack first
+                // Compile the inner expression onto the stack first
                 self.compile_expression(right);
                 
-                // 2. Emit the correct modification opcode based on the operator type
+                // Emit the correct modification opcode based on the operator type
                 match operator {
                     crate::parser::UnaryOperator::Minus => {
                         self.emit(OpCode::Negate);
@@ -673,7 +669,7 @@ impl Compiler {
             }
 
             Expression::Call { callee, arguments } => {
-                // --- PATHWAY A: Method Calls (e.g., x.append(y)) ---
+                // Method Calls (x.append(y))
                 if let Expression::Get { object, name } = &callee.kind {
                     let is_mutating_method = crate::nativemthds::is_mutating_method(name);
 
@@ -687,14 +683,14 @@ impl Compiler {
                         }
 
                         // Manually emit GetLocal for the variable object instead of 
-                        // calling compile_expression. This cuts off double-borrowing panics!
+                        // calling compile_expression. This cuts off double-borrowing panics
                         if let Some(slot) = self.resolve_local(obj_name) {
                             self.emit(OpCode::GetLocal(slot));
                         } else {
                             self.error(&format!("Variable '{}' used before declaration.", obj_name), expr.span);
                         }
                     } else {
-                        // Fallback manner for raw elements (e.g., [1, 2].get(0))
+                        // Fallback manner for raw elements ( [1, 2].get(0) )
                         self.compile_expression(object);
                     }
 
@@ -712,7 +708,7 @@ impl Compiler {
                     return; 
                 } 
 
-                // --- PATHWAY B: Standalone Global Function Calls (e.g., print(x), test_to_number()) ---
+                // --- Standalone Global Function Calls ( print(x), test_to_number() ) ---
                 if let Expression::Variable { name, .. } = &callee.kind {
                     // Compile function parameters onto the stack
                     for arg in arguments {
@@ -723,11 +719,8 @@ impl Compiler {
                         name: name.clone(),
                         arg_count: arguments.len(),
                     });
-                    
-                    // 🌟 CRITICAL FIX: Return early here as well! 
-                    // This explicitly registers a complete terminal expression loop, 
-                    // stopping any fall-through code clobbering.
                     return; 
+
                 } else {
                     self.error("Dynamic/Anonymous function calls are not supported yet.", expr.span);
                 }
