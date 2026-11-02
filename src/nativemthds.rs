@@ -1,6 +1,6 @@
 // src/nativemthds.rs
 use std::collections::HashMap;
-use crate::vm::RuntimeValue;
+use crate::interpreter::RuntimeValue;
 
 // The method type signature alias
 pub type NativeMethodFn = fn(obj: &RuntimeValue, args: &[RuntimeValue]) -> RuntimeValue;

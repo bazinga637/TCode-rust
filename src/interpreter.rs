@@ -1,10 +1,10 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::collections::HashMap;
-use crate::compiler::OpCode;
+use crate::generator::OpCode;
 use crate::nativefns::NativeFn;
 
-pub struct VirtualMachine {
+pub struct Interpreter {
     bytecode: Vec<OpCode>,
     pub ip: usize,
     stack: Vec<RuntimeValue>,
@@ -30,8 +30,7 @@ struct CallFrame {
     locals: Vec<RuntimeValue>,
 }
 
-impl VirtualMachine {
-    // 🌟 Updated: Added user_functions to parameters
+impl Interpreter {
     pub fn new(
         bytecode: Vec<OpCode>, 
         natives: HashMap<String, NativeFn>,

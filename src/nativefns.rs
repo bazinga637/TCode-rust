@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::io::{self, Write};
 use std::rc::Rc;
 use std::cell::RefCell;
-use crate::vm::RuntimeValue;
+use crate::interpreter::RuntimeValue;
 
 pub type NativeFn = fn(args: &[RuntimeValue]) -> RuntimeValue;
 

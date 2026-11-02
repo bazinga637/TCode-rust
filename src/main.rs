@@ -1,15 +1,14 @@
-
 mod lexer;
 use lexer::Lexer;
 
 mod parser;
 use parser::Parser;
 
-mod compiler;
-use compiler::Compiler;
+mod generator;
+use generator::Generator;
 
-mod vm;
-use vm::VirtualMachine;
+mod interpreter;
+use interpreter::Interpreter;
 
 mod nativefns;
 mod nativemthds; 
@@ -25,7 +24,7 @@ fn main() {
     let args: Vec<String> = env::args().collect();
 
     // check if a filename was actually provided
-    // args[0] is always the path to the compiler executable itself. 
+    // args[0] is always the path to the generator executable itself. 
     // args[1] will be the user's input file path.
     if args.len() < 2 {
         println!("Usage: cargo run <filename.tc>");
@@ -44,7 +43,7 @@ fn main() {
     let _ = log(&source_code);
 
     let lexer = Lexer::new(source_code);
-    let tokens = lexer.lex(); // Returns Vec<Token> perfectly tracked with real spans!
+    let tokens = lexer.lex();
 
     print_info_after("Tokenizing source code", None);
 
@@ -59,11 +58,11 @@ fn main() {
 
     let _ = log(&ast);
 
-    print_info_before("Compiling AST to Bytecode");
+    print_info_before("Generating Bytecode from AST");
     
-    let (bytecode, user_functions) = Compiler::compile(&ast);
+    let (bytecode, user_functions) = Generator::compile(&ast);
 
-    print_info_after("Compiling AST to Bytecode", None);
+    print_info_after("Generating Bytecode from AST", None);
     
     let _ = log(&bytecode);
 
@@ -72,21 +71,21 @@ fn main() {
 
 
     println!("Executing program...");
-    // pass the registry map straight into the VM constructor
-    let mut virtual_machine = VirtualMachine::new(
+    // pass the registry map straight into the Interpreter
+    let mut interpreter = Interpreter::new(
         bytecode,
         native_functions, 
         native_methods,
         user_functions,
     );
 
-    if let Some(&main_address) = virtual_machine.user_functions.get("main") {
-        virtual_machine.ip = main_address; // makes the VM start at 'main' function
+    if let Some(&main_address) = interpreter.user_functions.get("main") {
+        interpreter.ip = main_address; // makes the VM start at 'main' function
     } else {
         panic!("Runtime Error: No 'main' function was found in the compiled TCode program.");
     }
 
-    virtual_machine.run();
+    interpreter.run();
 }
 
 fn print_info_before(process: &str) {
