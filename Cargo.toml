@@ -1,7 +1,14 @@
 [package]
-name = "tcode-compiler"
+name = "tcodec"
 version = "0.1.0"
-edition = "2024"
+authors = ["Bazinga637"]
+edition = "2021"
+description = "A custom programming language toolchain featuring implicit borrowing and explicit mutability."
+license = "MIT OR Apache-2.0"    # Crates.io strictly requires a valid open-source license
+repository = "https://github.com/bazinga637/TCode-rust"
+readme = "README.md"
+keywords = ["compiler", "interpreter", "language", "bytecode", "vm"]
+categories = ["development-tools::compilers"]
 
 [[bin]]
 name = "tcodec"

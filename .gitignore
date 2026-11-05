@@ -1,5 +1,7 @@
 /target
 .log
+**/*.rs.bk
+Cargo.lock
 example\ copy.tc
 syntax.tc
 example.tc

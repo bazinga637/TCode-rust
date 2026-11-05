@@ -5,6 +5,7 @@ fn main() {
     test_append()
     test_string_addition()
     test_unary()
+    test_type_checker()
 
 }
 // test native functions
@@ -22,7 +23,7 @@ fn test_append() {
     let z = 1
     x.append(y)
     x.append(z)
-    if x == ["a", 1] {
+    if x != ["a", 1] {
         panic("TestError: append method failed")
     }
 }
@@ -36,6 +37,10 @@ fn test_string_addition() {
         panic("TestError: String Addition failed.")
     }
 }
+
+fn test_type_checker() {
+    let x: [number] = [5]
+  }
 
 fn test_unary() {
     let x = -1

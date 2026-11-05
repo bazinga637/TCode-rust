@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "tcode-compiler"
+name = "tcodec"
 version = "0.1.0"

@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone)]
 pub enum Statement {
     // let x = 5;
@@ -8,21 +7,21 @@ pub enum Statement {
         initializer: ExpressionNode,
         is_mutable: bool,
     },
-    
+
     // x = 10;
     Assignment {
         name: String,
         value: ExpressionNode,
     },
-    
-    // if (cond) { then } else { else }
+
+    // if cond { then } else { else }
     If {
         condition: ExpressionNode,
         then_branch: Box<StatementNode>,
         else_branch: Option<Box<StatementNode>>, // Optional 'else'
     },
-    
-    // while (cond) { body }
+
+    // while cond { body }
     While {
         condition: ExpressionNode,
         body: Box<StatementNode>,
@@ -40,13 +39,13 @@ pub enum Statement {
         params: Vec<ExpressionNode>,
         body: Vec<StatementNode>,
     },
-    
+
     // return 5;
     Return(Option<ExpressionNode>),
-    
+
     // { stmt1; stmt2; }
     Block(Vec<StatementNode>),
-    
+
     // A standalone expression acting as a statement (e.g., calling print(x);)
     Expression(ExpressionNode),
 
@@ -67,14 +66,14 @@ pub struct MatchCase {
 pub enum Expression {
     // A raw value like 5, "hello", or true
     Literal(LiteralValue),
-    
+
     // Accessing a variable by name (e.g., x)
     Variable {
         name: String,
         is_mutable: bool,
     },
-    
-     // Clean property tracking (e.g., standard_list . append)
+
+    // Clean property tracking (e.g., standard_list . append)
     Get {
         object: Box<ExpressionNode>,
         name: String,
@@ -88,13 +87,13 @@ pub enum Expression {
         left: Box<ExpressionNode>,
         right: Box<ExpressionNode>,
     },
-    
+
     // Unary operations (e.g., -x, !flag)
     Unary {
         operator: UnaryOperator,
         right: Box<ExpressionNode>,
     },
-    
+
     // Calling a function (e.g., add(1, 2))
     Call {
         callee: Box<ExpressionNode>,
@@ -112,9 +111,18 @@ pub enum LiteralValue {
 
 #[derive(Debug, Clone)]
 pub enum BinaryOperator {
-    Add, Sub, Mul, Div,               // Math
-    Equal, NotEqual, LessThan, GreaterThan, LessEqual, GreaterEqual, // Comparison
-    And, Or,                          // Logic
+    Add,
+    Sub,
+    Mul,
+    Div, // Math
+    Equal,
+    NotEqual,
+    LessThan,
+    GreaterThan,
+    LessEqual,
+    GreaterEqual, // Comparison
+    And,
+    Or, // Logic
 }
 
 #[derive(Debug, Clone)]
@@ -125,15 +133,15 @@ pub enum UnaryOperator {
 
 #[derive(Debug, Clone)]
 pub struct ExpressionNode {
-    pub span: Span,   // Line and column metadata
-    pub kind: Expression,   // The actual enum (Literal, Binary, Call, etc.)
+    pub span: Span,       // Line and column metadata
+    pub kind: Expression, // The actual enum (Literal, Binary, Call, etc.)
 }
 
 // 2. The wrapper for all statements
 #[derive(Debug, Clone)]
 pub struct StatementNode {
-    pub span: Span,   // Line and column metadata
-    pub kind: Statement,   // The actual enum (VarDeclaration, If, While, etc.)
+    pub span: Span,      // Line and column metadata
+    pub kind: Statement, // The actual enum (VarDeclaration, If, While, etc.)
 }
 
 #[derive(Debug)]
@@ -141,9 +149,8 @@ pub struct Program {
     pub body: Vec<StatementNode>, // A flat list of top-level statements
 }
 
-use crate::lexer::Token;
 use crate::lexer::Span;
-
+use crate::lexer::Token;
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -152,41 +159,44 @@ pub struct Parser {
 
 impl Parser {
     pub fn new(tokens: Vec<Token>) -> Self {
-        Parser {
-            tokens,
-            index: 0,
-        }
+        Parser { tokens, index: 0 }
     }
 
-    // --- Core Navigation Methods ---
-    fn peek(&self) -> Option<&str> { 
-        self.tokens.get(self.index).map(|t| t.value.as_str()) 
+    // look at next token
+    fn peek(&self) -> Option<&str> {
+        self.tokens.get(self.index).map(|t| t.value.as_str())
     }
 
     // Grab the span of the next token to associate with your AST node
     fn peek_span(&self) -> Span {
-        self.tokens.get(self.index)
+        self.tokens
+            .get(self.index)
             .map(|t| t.span)
             .unwrap_or_else(|| {
                 // Fallback for EOF: use the span of the very last token if available
-                self.tokens.last().map(|t| t.span).unwrap_or(Span { line: 1, column: 1 })
+                self.tokens
+                    .last()
+                    .map(|t| t.span)
+                    .unwrap_or(Span { line: 1, column: 1 })
             })
     }
-    
+
     // advances forward by one token if it can
     fn advance(&mut self) -> Option<Token> {
         if self.index < self.tokens.len() {
             let token = self.tokens[self.index].clone();
             self.index += 1;
             Some(token)
-        } else { None }
+        } else {
+            None
+        }
     }
 
     // checks if next token matches 'expected' &str
     fn match_token(&mut self, expected: &str) -> bool {
-        if self.peek() == Some(expected) { 
-            self.advance(); 
-            return true; 
+        if self.peek() == Some(expected) {
+            self.advance();
+            return true;
         }
         false
     }
@@ -222,13 +232,13 @@ impl Parser {
     fn parse_var_declaration(&mut self) -> StatementNode {
         let start_span: Span = self.peek_span(); // Grab the exact position of "let"
         self.advance(); // consume "let"
-        
+
         // assumed not mutable by default, is changed to true if 'mut' keyword is present after 'let'
         let mut is_mutable: bool = false;
 
         if self.peek() == Some("mut") {
             is_mutable = true;
-            self.advance(); 
+            self.advance();
         }
 
         // gets variable name
@@ -241,10 +251,12 @@ impl Parser {
         if self.peek() == Some(":") {
             self.advance(); // consume ":"
             let mut type_tokens = Vec::new();
-            
+
             // Consume tokens until we find the assignment operator '='
             while let Some(tok) = self.peek() {
-                if tok == "=" { break; }
+                if tok == "=" {
+                    break;
+                }
                 type_tokens.push(self.advance().unwrap().value);
             }
             var_type = type_tokens.join(""); // Merges "List", "[", "int", "]" into "List[int]"
@@ -255,10 +267,14 @@ impl Parser {
 
         StatementNode {
             span: start_span, // Assign the dynamic starting position
-            kind: Statement::VarDeclaration { name, var_type, initializer, is_mutable },
+            kind: Statement::VarDeclaration {
+                name,
+                var_type,
+                initializer,
+                is_mutable,
+            },
         }
     }
-
 
     // Parses: if ( condition ) { body }
     fn parse_if_statement(&mut self) -> StatementNode {
@@ -276,7 +292,11 @@ impl Parser {
 
         StatementNode {
             span: start_span,
-            kind: Statement::If { condition, then_branch, else_branch },
+            kind: Statement::If {
+                condition,
+                then_branch,
+                else_branch,
+            },
         }
     }
 
@@ -293,16 +313,22 @@ impl Parser {
             // Check for the wildcard catch-all pattern "_"
             if self.peek() == Some("_") {
                 self.advance(); // consume "_"
-                assert!(self.match_token("=>"), "Expected '=>' thick arrow after fallback pattern '_'");
-                
+                assert!(
+                    self.match_token("=>"),
+                    "Expected '=>' thick arrow after fallback pattern '_'"
+                );
+
                 default_branch = Some(Box::new(self.parse_statement()));
                 continue;
             }
 
             // Parse normal value patterns (e.g., "what", 5, or true)
             let pattern = self.parse();
-            assert!(self.match_token("=>"), "Expected '=>' thick arrow after match pattern condition");
-            
+            assert!(
+                self.match_token("=>"),
+                "Expected '=>' thick arrow after match pattern condition"
+            );
+
             let body = if self.peek() == Some("{") {
                 Box::new(self.parse_block_statement())
             } else {
@@ -312,11 +338,18 @@ impl Parser {
             cases.push(MatchCase { pattern, body });
         }
 
-        assert!(self.match_token("}"), "Expected '}}' to close match block execution frame");
+        assert!(
+            self.match_token("}"),
+            "Expected '}}' to close match block execution frame"
+        );
 
         StatementNode {
             span: start_span,
-            kind: Statement::Match { target, cases, default_branch },
+            kind: Statement::Match {
+                target,
+                cases,
+                default_branch,
+            },
         }
     }
 
@@ -344,7 +377,10 @@ impl Parser {
         let item_name = item_token.value;
 
         // 2. Ensure "in" keyword is present
-        assert!(self.match_token("in"), "Expected 'in' keyword after variable name in for loop");
+        assert!(
+            self.match_token("in"),
+            "Expected 'in' keyword after variable name in for loop"
+        );
 
         // 3. Parse the array collection/iterable expression
         let iterable = self.parse();
@@ -354,7 +390,11 @@ impl Parser {
 
         StatementNode {
             span: start_span,
-            kind: Statement::For { item_name, iterable, body },
+            kind: Statement::For {
+                item_name,
+                iterable,
+                body,
+            },
         }
     }
 
@@ -363,23 +403,23 @@ impl Parser {
         let start_span: Span = self.peek_span();
         self.advance(); // consume "fn"
 
-        let name: String = self.advance().expect("Expected function name after 'fn'").value;
+        let name: String = self
+            .advance()
+            .expect("Expected function name after 'fn'")
+            .value;
         assert!(self.match_token("("), "Expected '(' after function name");
 
         let mut params: Vec<ExpressionNode> = Vec::new();
 
-        if self.peek().map(|s| s) != Some(")") {
+        if self.peek() != Some(")") {
             loop {
-                
                 let mut is_mutable: bool = false;
 
-                if self.peek().map(|s| s) == Some("mut") {
+                if self.peek() == Some("mut") {
                     is_mutable = true;
-                    self.advance(); 
+                    self.advance();
                 }
-                
                 let param_name: String = self.advance().expect("Expected parameter name").value;
-                
 
                 // 3. Skip type annotations if a colon ':' is present
                 if self.match_token(":") {
@@ -391,35 +431,41 @@ impl Parser {
                         self.advance(); // consume type tokens like "List[int]"
                     }
                 }
-            let param: ExpressionNode = ExpressionNode{ span: start_span, kind: Expression::Variable{ name: param_name, is_mutable } };
-            params.push(param);
+                let param: ExpressionNode = ExpressionNode {
+                    span: start_span,
+                    kind: Expression::Variable {
+                        name: param_name,
+                        is_mutable,
+                    },
+                };
+                params.push(param);
 
-            // break if there's no comma separating the next parameter
-            if !self.match_token(",") { break; }
+                // break if there's no comma separating the next parameter
+                if !self.match_token(",") {
+                    break;
+                }
             }
         }
 
         assert!(self.match_token(")"), "Expected ')' after parameter list");
-        
+
         let body_stmt = self.parse_statement();
         let body = match body_stmt.kind {
             Statement::Block(statements) => statements,
             _ => unreachable!(),
         };
-        
+
         StatementNode {
             span: start_span,
             kind: Statement::FunctionDeclaration { name, params, body },
         }
-        
     }
-        
-        
+
     // Parses: return 5  or  return
     fn parse_return_statement(&mut self) -> StatementNode {
         let start_span = self.peek_span();
         self.advance(); // consume "return"
-        
+
         let mut value = None;
         // Check if the next token belongs to a different statement or block closer
         if let Some(tok) = self.peek() {
@@ -440,7 +486,7 @@ impl Parser {
         self.advance(); // consume "{"
 
         let mut statements = Vec::new();
-        while self.peek().map(|s| s) != Some("}") {
+        while self.peek() != Some("}") {
             statements.push(self.parse_statement());
         }
 
@@ -458,12 +504,19 @@ impl Parser {
 
         let expr = self.parse();
 
-        if let Expression::Variable{name, is_mutable: _} = &expr.kind {
+        if let Expression::Variable {
+            name,
+            is_mutable: _,
+        } = &expr.kind
+        {
             if self.match_token("=") {
                 let value = self.parse();
                 return StatementNode {
                     span: start_span,
-                    kind: Statement::Assignment { name: name.clone(), value },
+                    kind: Statement::Assignment {
+                        name: name.clone(),
+                        value,
+                    },
                 };
             }
         }
@@ -475,11 +528,10 @@ impl Parser {
 
     // --- Expression Processing Rules ---
     // first
-    pub fn parse(&mut self) -> ExpressionNode { 
-        self.parse_logical_or() 
+    pub fn parse(&mut self) -> ExpressionNode {
+        self.parse_logical_or()
     }
-    
-    // second
+
     fn parse_logical_or(&mut self) -> ExpressionNode {
         let mut left = self.parse_logical_and();
 
@@ -487,7 +539,7 @@ impl Parser {
             let start_span = left.span;
             self.advance(); // consume "||"
             let right = self.parse_logical_and();
-        
+
             left = ExpressionNode {
                 span: start_span,
                 kind: Expression::Binary {
@@ -500,7 +552,6 @@ impl Parser {
         left
     }
 
-    // third
     fn parse_logical_and(&mut self) -> ExpressionNode {
         let mut left = self.parse_comparison();
 
@@ -508,7 +559,7 @@ impl Parser {
             let start_span = left.span;
             self.advance(); // consume "&&"
             let right = self.parse_comparison();
-        
+
             left = ExpressionNode {
                 span: start_span,
                 kind: Expression::Binary {
@@ -521,7 +572,6 @@ impl Parser {
         left
     }
 
-    // fourth
     fn parse_comparison(&mut self) -> ExpressionNode {
         let mut left = self.parse_additive();
 
@@ -553,7 +603,6 @@ impl Parser {
     }
 
     // Intercepts preceding '-' or '!' symbols before diving into literals
-    // seventh
     fn parse_unary(&mut self) -> ExpressionNode {
         if let Some(token) = self.peek() {
             let operator = match token {
@@ -565,9 +614,9 @@ impl Parser {
             if let Some(op) = operator {
                 let start_span = self.peek_span();
                 self.advance(); // Consume the operator symbol token
-                
+
                 // Recursively call parse_unary to correctly support chained elements like !!true
-                let right = self.parse_unary(); 
+                let right = self.parse_unary();
 
                 return ExpressionNode {
                     span: start_span,
@@ -581,8 +630,7 @@ impl Parser {
         // Fallback naturally to raw numbers/variables if no prefix matches
         self.parse_primary()
     }
-    
-    // fifth
+
     fn parse_additive(&mut self) -> ExpressionNode {
         let mut left = self.parse_multiplicative();
         while let Some(token) = self.peek() {
@@ -597,13 +645,16 @@ impl Parser {
             let right = self.parse_multiplicative();
             left = ExpressionNode {
                 span: start_span,
-                kind: Expression::Binary { operator, left: Box::new(left), right: Box::new(right) },
+                kind: Expression::Binary {
+                    operator,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                },
             };
         }
         left
     }
 
-    // sixth
     fn parse_multiplicative(&mut self) -> ExpressionNode {
         // Route through our call & property loop interceptor
         let mut left = self.parse_call_or_member();
@@ -618,7 +669,11 @@ impl Parser {
             let right = self.parse_call_or_member();
             left = ExpressionNode {
                 span: start_span,
-                kind: Expression::Binary { operator, left: Box::new(left), right: Box::new(right) },
+                kind: Expression::Binary {
+                    operator,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                },
             };
         }
         left
@@ -632,14 +687,16 @@ impl Parser {
             if self.match_token("(") {
                 // Parse call arguments
                 let mut arguments = Vec::new();
-                if self.peek().map(|s| s) != Some(")") {
+                if self.peek() != Some(")") {
                     loop {
                         arguments.push(self.parse());
-                        if !self.match_token(",") { break; }
+                        if !self.match_token(",") {
+                            break;
+                        }
                     }
                 }
                 assert!(self.match_token(")"), "Expected ')' after arguments");
-                
+
                 expr = ExpressionNode {
                     span: start_span,
                     kind: Expression::Call {
@@ -649,7 +706,10 @@ impl Parser {
                 };
             } else if self.match_token(".") {
                 // Pure member lookup! No more string concatenation hacks.
-                let property = self.advance().expect("Expected field or method name after '.'").value;
+                let property = self
+                    .advance()
+                    .expect("Expected field or method name after '.'")
+                    .value;
                 expr = ExpressionNode {
                     span: start_span,
                     kind: Expression::Get {
@@ -665,10 +725,9 @@ impl Parser {
         expr
     }
 
-
     fn parse_primary(&mut self) -> ExpressionNode {
         let start_span = self.peek_span(); // Grab the position before consuming tokens
-        
+
         let mut is_mutable = false;
         if self.peek() == Some("mut") {
             is_mutable = true;
@@ -685,15 +744,23 @@ impl Parser {
         }
 
         if token == "[" {
-            assert!(!is_mutable, "Cannot apply 'mut' modifier to an array literal initialization");
+            assert!(
+                !is_mutable,
+                "Cannot apply 'mut' modifier to an array literal initialization"
+            );
             let mut elements = Vec::new();
             if self.peek() != Some("]") {
                 loop {
                     elements.push(self.parse());
-                    if !self.match_token(",") { break; }
+                    if !self.match_token(",") {
+                        break;
+                    }
                 }
             }
-            assert!(self.match_token("]"), "Expected closing bracket ']' after array elements");
+            assert!(
+                self.match_token("]"),
+                "Expected closing bracket ']' after array elements"
+            );
             return ExpressionNode {
                 span: start_span,
                 kind: Expression::Array(elements),
@@ -707,12 +774,17 @@ impl Parser {
             };
         }
         // will parse strings as literals ("a", 'a')
-        if (token.starts_with('"') && token.ends_with('"')) || (token.starts_with('\'') && token.ends_with('\'')) {
-            assert!(!is_mutable, "Cannot apply 'mut' modifier to a string literal");
-            
+        if (token.starts_with('"') && token.ends_with('"'))
+            || (token.starts_with('\'') && token.ends_with('\''))
+        {
+            assert!(
+                !is_mutable,
+                "Cannot apply 'mut' modifier to a string literal"
+            );
+
             // Extract the inside text by stripping out the bounding quotes
             let inner_value = token[1..token.len() - 1].to_string();
-            
+
             return ExpressionNode {
                 span: start_span,
                 kind: Expression::Literal(LiteralValue::String(inner_value)),
@@ -720,7 +792,10 @@ impl Parser {
         }
 
         if token == "true" {
-            assert!(!is_mutable, "Cannot apply 'mut' modifier to a boolean literal");
+            assert!(
+                !is_mutable,
+                "Cannot apply 'mut' modifier to a boolean literal"
+            );
             return ExpressionNode {
                 span: start_span,
                 kind: Expression::Literal(LiteralValue::Boolean(true)),
@@ -728,13 +803,16 @@ impl Parser {
         }
 
         if token == "false" {
-            assert!(!is_mutable, "Cannot apply 'mut' modifier to a boolean literal");
+            assert!(
+                !is_mutable,
+                "Cannot apply 'mut' modifier to a boolean literal"
+            );
             return ExpressionNode {
                 span: start_span,
                 kind: Expression::Literal(LiteralValue::Boolean(false)),
             };
         }
-        
+
         if token == "nil" || token == "null" {
             assert!(!is_mutable, "Cannot apply 'mut' modifier to a nil literal");
             return ExpressionNode {
@@ -745,7 +823,10 @@ impl Parser {
 
         ExpressionNode {
             span: start_span,
-            kind: Expression::Variable { name: token, is_mutable },
+            kind: Expression::Variable {
+                name: token,
+                is_mutable,
+            },
         }
     }
 }

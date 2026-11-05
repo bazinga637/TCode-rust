@@ -4,6 +4,9 @@ use lexer::Lexer;
 mod parser;
 use parser::Parser;
 
+mod typechecker;
+use typechecker::TypeChecker;
+
 mod generator;
 use generator::Generator;
 
@@ -62,34 +65,30 @@ fn main() {
     }
 
     print_info_before(&format!("Getting source code from {}", file_path.display()));
-
     let source_code = fs::read_to_string(target_filename)
         .unwrap_or_else(|_| panic!("Failed to read the file: {}", file_path.display()));
-
     print_info_after("Getting source code", None);
-
     let _ = log(&source_code);
 
     let lexer = Lexer::new(source_code);
     let tokens = lexer.lex();
-
     print_info_after("Tokenizing source code", None);
 
     let _ = log(&tokens);
 
     print_info_before("Parsing tokens");
     let mut parser: Parser = Parser::new(tokens);
-
     let ast: parser::Program = parser.parse_program();
-
     print_info_after("Parsing tokens", None);
 
     let _ = log(&ast);
 
+    print_info_before("Running Type Verification Pass");
+    TypeChecker::check(&ast); // Enforces type checks! Halts if it finds violations.
+    print_info_after("Type Verification Pass", None);
+
     print_info_before("Generating Bytecode from AST");
-
     let (bytecode, user_functions) = Generator::compile(&ast);
-
     print_info_after("Generating Bytecode from AST", None);
 
     let _ = log(&bytecode);
