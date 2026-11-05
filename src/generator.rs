@@ -1,5 +1,9 @@
+use crate::parser::{
+    BinaryOperator, Expression, ExpressionNode, LiteralValue, Program, Statement, StatementNode,
+};
 use std::collections::HashMap;
-use crate::{parser::{BinaryOperator, Expression, ExpressionNode, LiteralValue, Program, Statement, StatementNode}};
+
+use crate::lexer::Span;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Ownership {
@@ -14,41 +18,49 @@ pub enum OpCode {
     PushString(String),
     PushBoolean(bool),
     PushNil,
-    
+
     // Memory / Variable Commands
     GetLocal(usize), // Read variable value from index slot
     SetLocal(usize), // Pop value and store into index slot
-    
+
     // Evaluation Commands
-    Add, Sub, Mul, Div,
-    Equal, NotEqual, LessThan, GreaterThan,
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Equal,
+    NotEqual,
+    LessThan,
+    GreaterThan,
+    And,
+    Or,
     Negate, // -x
     Not,    // !x
-    Pop, // Cleans the stack after a standalone expression statement
-    
+    Pop,    // Cleans the stack after a standalone expression statement
+
     // Structures
     BuildArray(usize), // Pop N items to construct an array literal
     CallMethod { name: String, arg_count: usize },
-    
+    CallFunction { name: String, arg_count: usize },
     // Jumps (The usize is the instruction pointer index to jump to)
     Jump(usize),
     JumpIfFalse(usize),
-    
-    CallFunction { name: String, arg_count: usize },
+
     Return,
 
+    LineUpdate(Span),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BorrowKind {
-    Shared,    // Equivalent to &
-    Mut,       // Equivalent to &mut
+    Shared, // Equivalent to &
+    Mut,    // Equivalent to &mut
 }
 
 #[derive(Debug, Clone)]
 pub struct Loan {
     pub provider_name: String, // The source variable being borrowed (e.g., "numbers")
-    pub kind: BorrowKind,       // Is it a shared or mutable borrow?
+    pub kind: BorrowKind,      // Is it a shared or mutable borrow?
     pub borrow_scope_depth: usize, // Which scope level created this lease?
 }
 
@@ -57,9 +69,9 @@ pub struct VariableMetadata {
     pub slot: usize,
     pub is_mutable: bool,
     // Track who THIS variable is currently borrowing from
-    pub borrowing_from: Option<Loan>, 
+    pub borrowing_from: Option<Loan>,
     // Track who is actively borrowing FROM this variable
-    pub active_loans: Vec<Loan>,      
+    pub active_loans: Vec<Loan>,
 }
 
 pub struct Scope {
@@ -72,7 +84,7 @@ pub struct Generator {
     pub bytecode: Vec<OpCode>,
     pub scopes: Vec<Scope>, // A stack of lexical blocks
 
-    pub function_registry: HashMap<String, usize>, 
+    pub function_registry: HashMap<String, usize>,
     pub locals_count: usize,
 }
 
@@ -81,21 +93,36 @@ impl Generator {
         Self {
             bytecode: Vec::new(),
             // Start with a global/root lexical scope
-            scopes: vec![Scope { variables: HashMap::new(), depth_start_index: 0 }],
+            scopes: vec![Scope {
+                variables: HashMap::new(),
+                depth_start_index: 0,
+            }],
 
-            function_registry: HashMap::new(), 
+            function_registry: HashMap::new(),
             locals_count: 0,
         }
     }
 
     fn error(&self, message: &str, span: crate::lexer::Span) -> ! {
-        panic!(
-            "Compile Error [Line {}, Col {}]: {}",
+        eprintln!(
+            "\x1B[1;31mCompile Error [Line {}, Col {}]:\x1B[0m {}",
             span.line, span.column, message
         );
+        std::process::exit(1);
     }
 
-    /// Look up variable tracking metadata immutably (walking scopes backwards)
+    fn clear_temporary_statement_loans(&mut self) {
+        let current_depth = self.scopes.len();
+        for scope in &mut self.scopes {
+            for metadata in scope.variables.values_mut() {
+                metadata
+                    .active_loans
+                    .retain(|loan| loan.borrow_scope_depth < current_depth);
+            }
+        }
+    }
+
+    // Look up variable tracking metadata immutably (walking scopes backwards)
     fn resolve_variable_metadata(&self, name: &str) -> Option<&VariableMetadata> {
         for scope in self.scopes.iter().rev() {
             if let Some(metadata) = scope.variables.get(name) {
@@ -126,10 +153,14 @@ impl Generator {
         self.current_scope_mut().variables.insert(name, metadata);
     }
 
-        // Added a `span` parameter to pin error locations
-    fn borrow_variable(&mut self, source_name: &str, borrow_kind: BorrowKind, span: crate::lexer::Span) {
+    fn borrow_variable(
+        &mut self,
+        source_name: &str,
+        borrow_kind: BorrowKind,
+        span: crate::lexer::Span,
+    ) {
         let current_depth = self.scopes.len();
-        
+
         if let Some(metadata) = self.resolve_variable_metadata_mut(source_name) {
             if borrow_kind == BorrowKind::Mut && !metadata.is_mutable {
                 self.error(
@@ -173,15 +204,17 @@ impl Generator {
 
     fn pop_scope(&mut self) {
         let current_depth = self.scopes.len();
-        
+
         if let Some(popped_scope) = self.scopes.pop() {
             self.locals_count = popped_scope.depth_start_index;
-            
-            // Walk backwards through remaining parent scopes 
+
+            // Walk backwards through remaining parent scopes
             // and remove loans that were tied to the popped depth level
             for scope in &mut self.scopes {
                 for metadata in scope.variables.values_mut() {
-                    metadata.active_loans.retain(|loan| loan.borrow_scope_depth < current_depth);
+                    metadata
+                        .active_loans
+                        .retain(|loan| loan.borrow_scope_depth < current_depth);
                 }
             }
         }
@@ -195,18 +228,21 @@ impl Generator {
 
         for (index, item) in native_functions.keys().enumerate() {
             // Insert native hooks as read-only global entries
-            generator.scopes[0].variables.insert(item.to_string(), VariableMetadata {
-                slot: 9999 - index,
-                is_mutable: false,
-                borrowing_from: None,
-                active_loans: Vec::new(),
-            });
+            generator.scopes[0].variables.insert(
+                item.to_string(),
+                VariableMetadata {
+                    slot: 9999 - index,
+                    is_mutable: false,
+                    borrowing_from: None,
+                    active_loans: Vec::new(),
+                },
+            );
         }
 
         generator.compile_program(program);
         generator.finish()
     }
-    /// Consumes the generator and returns the generated bytecode 
+    /// Consumes the generator and returns the generated bytecode
     /// alongside the tracked user function positions.
     pub fn finish(self) -> (Vec<OpCode>, HashMap<String, usize>) {
         (self.bytecode, self.function_registry)
@@ -229,7 +265,9 @@ impl Generator {
     }
 
     fn current_scope_mut(&mut self) -> &mut Scope {
-        self.scopes.last_mut().expect("Generator stack error: No active scope found.")
+        self.scopes
+            .last_mut()
+            .expect("Generator stack error: No active scope found.")
     }
 
     pub fn compile_program(&mut self, program: &Program) {
@@ -239,16 +277,24 @@ impl Generator {
     }
 
     pub fn compile_statement(&mut self, stmt: &StatementNode) {
+        self.emit(OpCode::LineUpdate(stmt.span));
+
         #[allow(unreachable_patterns)]
         match &stmt.kind {
-            Statement::VarDeclaration { name, initializer, is_mutable, var_type: _ } => {
+            Statement::VarDeclaration {
+                name,
+                initializer,
+                is_mutable,
+                var_type: _,
+            } => {
                 self.compile_expression(initializer);
 
-                let slot = self.locals_count; 
+                let slot = self.locals_count;
                 self.insert_variable_metadata(name.clone(), slot, *is_mutable);
 
-                self.locals_count += 1; 
+                self.locals_count += 1;
                 self.emit(OpCode::SetLocal(slot));
+                self.clear_temporary_statement_loans();
             }
 
             Statement::Assignment { name, value } => {
@@ -261,25 +307,21 @@ impl Generator {
                         self.error(&format!("Cannot mutate variable '{}' because it is currently implicitly borrowed elsewhere!", name), stmt.span);
                     }
                 } else {
-                    self.error(&format!("Variable '{}' assigned before declaration.", name), stmt.span);
+                    self.error(
+                        &format!("Variable '{}' assigned before declaration.", name),
+                        stmt.span,
+                    );
                 }
                 self.compile_expression(value);
                 let slot = self.resolve_local(name).unwrap();
                 self.emit(OpCode::SetLocal(slot));
-
-                let current_depth = self.scopes.len();
-                for scope in &mut self.scopes {
-                    for metadata in scope.variables.values_mut() {
-                        // Change '<' to '<=' to safely release temporary locks
-                        metadata.active_loans.retain(|loan| loan.borrow_scope_depth < current_depth);
-                    }
-                }
+                self.clear_temporary_statement_loans();
             }
 
             Statement::Expression(expr) => {
                 self.compile_expression(expr);
-                
-                // If it's a Call context that targets a method (like .append) which pushes an explicit 
+
+                // If it's a Call context that targets a method (like .append) which pushes an explicit
                 // Return placeholder or handles its own stack footprint balance, make sure we don't
                 // aggressively pop from an empty evaluation stack register.
                 match &expr.kind {
@@ -294,13 +336,8 @@ impl Generator {
                         self.emit(OpCode::Pop);
                     }
                 }
-                let current_depth = self.scopes.len();
-                for scope in &mut self.scopes {
-                    for metadata in scope.variables.values_mut() {
-                        // Change '<' to '<=' to safely release the current line's temporary locks
-                        metadata.active_loans.retain(|loan| loan.borrow_scope_depth < current_depth);
-                    }
-                }
+
+                self.clear_temporary_statement_loans();
             }
 
             Statement::Block(statements) => {
@@ -313,36 +350,42 @@ impl Generator {
                 self.pop_scope();
             }
 
-            Statement::Match { target, cases, default_branch } => {
+            Statement::Match {
+                target,
+                cases,
+                default_branch,
+            } => {
                 // Evaluate the target expression FIRST (pushes value to evaluation stack)
                 self.compile_expression(target);
-                
+
                 let hidden_target_name = format!("$match_target_{}", self.bytecode.len());
-                let target_slot = self.locals_count; 
+                let target_slot = self.locals_count;
                 self.locals_count += 1;
-                
+
                 // Store the value into the register slot immediately
                 self.insert_variable_metadata(hidden_target_name.clone(), target_slot, false);
                 self.emit(OpCode::SetLocal(target_slot));
 
                 // Safely open the inner case block scope context using the helper
-                self.push_scope(); 
+                self.push_scope();
 
-                let mut end_jumps = Vec::new(); 
+                let mut end_jumps = Vec::new();
                 let mut next_case_jump_ip: Option<usize> = None;
 
                 // Process structural match cases sequentially
                 for case in cases {
                     if let Some(prev_false_jump) = next_case_jump_ip {
                         let current_address = self.bytecode.len();
-                        if let Some(OpCode::JumpIfFalse(target)) = self.bytecode.get_mut(prev_false_jump) {
+                        if let Some(OpCode::JumpIfFalse(target)) =
+                            self.bytecode.get_mut(prev_false_jump)
+                        {
                             *target = current_address;
                         }
                     }
 
                     self.emit(OpCode::GetLocal(target_slot));
                     self.compile_expression(&case.pattern);
-                    self.emit(OpCode::Equal); 
+                    self.emit(OpCode::Equal);
 
                     next_case_jump_ip = Some(self.emit(OpCode::JumpIfFalse(0)));
 
@@ -361,18 +404,19 @@ impl Generator {
                     end_jumps.push(self.emit(OpCode::Jump(0)));
                 }
 
-
                 if let Some(prev_false_jump) = next_case_jump_ip {
                     let fallthrough_address = self.bytecode.len();
-                    if let Some(OpCode::JumpIfFalse(target)) = self.bytecode.get_mut(prev_false_jump) {
+                    if let Some(OpCode::JumpIfFalse(target)) =
+                        self.bytecode.get_mut(prev_false_jump)
+                    {
                         *target = fallthrough_address;
                     }
                 }
 
-                // Calculate the match end right here, BEFORE the default branch compiles!
-                // This ensures all successful pattern arms leap completely past the default block.
+                // Calculate the match end right here, BEFORE the default branch compiles
+                // to ensure all successful pattern arms leap completely past the default block
                 let match_end_address = self.bytecode.len();
-                
+
                 // Backpatch successful case paths to jump to this safe end-marker address address
                 for exit_jump in end_jumps {
                     if let Some(OpCode::Jump(target)) = self.bytecode.get_mut(exit_jump) {
@@ -392,28 +436,33 @@ impl Generator {
                 self.pop_scope();
             }
 
-            Statement::If { condition, then_branch, else_branch } => {
+            Statement::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
                 // Evaluate condition
                 self.compile_expression(condition);
-                
+
                 // Emit placeholder jump
                 let jump_false_ip = self.emit(OpCode::JumpIfFalse(0));
-                
+
                 // Process the true code pathway
                 self.compile_statement(then_branch);
-                
+
                 if let Some(else_stmt) = else_branch {
                     // Skip else block if we executed then block
                     let jump_end_ip = self.emit(OpCode::Jump(0));
-                    
+
                     // Backpatch: false pathway starts exactly here
                     let else_start_ip = self.bytecode.len();
-                    if let Some(OpCode::JumpIfFalse(target)) = self.bytecode.get_mut(jump_false_ip) {
+                    if let Some(OpCode::JumpIfFalse(target)) = self.bytecode.get_mut(jump_false_ip)
+                    {
                         *target = else_start_ip;
                     }
-                    
+
                     self.compile_statement(else_stmt);
-                    
+
                     // Backpatch: destination after else block completes
                     let post_else_ip = self.bytecode.len();
                     if let Some(OpCode::Jump(target)) = self.bytecode.get_mut(jump_end_ip) {
@@ -422,7 +471,8 @@ impl Generator {
                 } else {
                     // No else block present, backpatch directly to the exit point
                     let post_if_ip = self.bytecode.len();
-                    if let Some(OpCode::JumpIfFalse(target)) = self.bytecode.get_mut(jump_false_ip) {
+                    if let Some(OpCode::JumpIfFalse(target)) = self.bytecode.get_mut(jump_false_ip)
+                    {
                         *target = post_if_ip;
                     }
                 }
@@ -431,10 +481,11 @@ impl Generator {
             Statement::FunctionDeclaration { name, params, body } => {
                 // Skip compiling function body during normal sequential execution
                 let jump_over_func_ip = self.emit(OpCode::Jump(0));
-                
+
                 // Track where this function starts in the bytecode array
                 let func_entry_point = self.bytecode.len();
-                self.function_registry.insert(name.clone(), func_entry_point);
+                self.function_registry
+                    .insert(name.clone(), func_entry_point);
 
                 // Setup a clean local variable scope space for this function
                 self.push_scope();
@@ -465,35 +516,39 @@ impl Generator {
                 // Push a fallback Nil onto the stack right before the trailing Return opcode
                 // To safely handle it without adding extra stack overhead:
                 // We only emit PushNil if the last statement wasn't an implicit expression return.
-                let ends_with_expression = !body.is_empty() && matches!(body.last().unwrap().kind, Statement::Expression(_));
+                let ends_with_expression = !body.is_empty()
+                    && matches!(body.last().unwrap().kind, Statement::Expression(_));
                 if !ends_with_expression {
-                    self.emit(OpCode::PushNil); 
+                    self.emit(OpCode::PushNil);
                 }
 
                 self.emit(OpCode::Return);
-                
+
                 // Clean up and pop the function local scope frame
                 self.pop_scope();
 
                 // Reset the local tracking metadata counts and clear the root scope variables!
-                // Since functions are isolated packages, we flush previous scratchpads 
+                // Since functions are isolated packages, we flush previous scratchpads
                 // so subsequent function passes don't inherit old loan collisions.
                 if self.scopes.len() == 1 {
                     self.scopes[0].variables.clear();
-                    
+
                     // Re-register the native system hooks into the wiped root scope
                     let native_fns_list = ["print", "readline", "len", "split", "to_number"];
                     for (index, item) in native_fns_list.iter().enumerate() {
-                        self.scopes[0].variables.insert(item.to_string(), VariableMetadata {
-                            slot: 9999 - index,
-                            is_mutable: false,
-                            borrowing_from: None,
-                            active_loans: Vec::new(),
-                        });
+                        self.scopes[0].variables.insert(
+                            item.to_string(),
+                            VariableMetadata {
+                                slot: 9999 - index,
+                                is_mutable: false,
+                                borrowing_from: None,
+                                active_loans: Vec::new(),
+                            },
+                        );
                     }
                 }
 
-                // 2. Backpatch: Normal outer execution lands safely past function body
+                // Backpatch: Normal outer execution lands safely past function body
                 let post_func_ip = self.bytecode.len();
                 if let Some(OpCode::Jump(target)) = self.bytecode.get_mut(jump_over_func_ip) {
                     *target = post_func_ip;
@@ -503,22 +558,26 @@ impl Generator {
             Statement::While { condition, body } => {
                 let loop_start_ip = self.bytecode.len();
                 self.compile_expression(condition);
-                
+
                 let jump_false_ip = self.emit(OpCode::JumpIfFalse(0));
                 self.compile_statement(body);
-                
+
                 self.emit(OpCode::Jump(loop_start_ip));
-                
+
                 let loop_end_ip = self.bytecode.len();
                 if let Some(OpCode::JumpIfFalse(target)) = self.bytecode.get_mut(jump_false_ip) {
                     *target = loop_end_ip;
                 }
             }
 
-            Statement::For { item_name, iterable, body } => {
+            Statement::For {
+                item_name,
+                iterable,
+                body,
+            } => {
                 let hidden_idx_name = format!("$idx_{}", self.bytecode.len());
                 let hidden_list_name = format!("$list_{}", self.bytecode.len());
-                
+
                 // If the container is a variable, register a shared lease
                 let mut source_iterable_var = None;
                 if let Expression::Variable { name: var_name, .. } = &iterable.kind {
@@ -544,10 +603,13 @@ impl Generator {
                 // --- Loop Condition Guard ---
                 let loop_start_ip = self.bytecode.len();
                 self.emit(OpCode::GetLocal(idx_slot));
-                
+
                 self.emit(OpCode::GetLocal(list_slot));
-                self.emit(OpCode::CallFunction { name: "len".to_string(), arg_count: 1 });
-                self.emit(OpCode::LessThan); 
+                self.emit(OpCode::CallFunction {
+                    name: "len".to_string(),
+                    arg_count: 1,
+                });
+                self.emit(OpCode::LessThan);
 
                 let jump_false_ip = self.emit(OpCode::JumpIfFalse(0));
 
@@ -555,10 +617,13 @@ impl Generator {
                 let item_slot = self.locals_count;
                 self.locals_count += 1;
                 self.insert_variable_metadata(item_name.clone(), item_slot, false);
-                
+
                 self.emit(OpCode::GetLocal(list_slot));
                 self.emit(OpCode::GetLocal(idx_slot));
-                self.emit(OpCode::CallMethod { name: "get".to_string(), arg_count: 1 }); 
+                self.emit(OpCode::CallMethod {
+                    name: "get".to_string(),
+                    arg_count: 1,
+                });
                 self.emit(OpCode::SetLocal(item_slot));
 
                 self.compile_statement(body);
@@ -594,7 +659,7 @@ impl Generator {
                     // If it's a blank return push Nil onto the stack as a placeholder
                     self.emit(OpCode::PushNil);
                 }
-                
+
                 self.emit(OpCode::Return);
             }
 
@@ -606,34 +671,71 @@ impl Generator {
         #[allow(unreachable_patterns)]
         match &expr.kind {
             Expression::Literal(lit) => match lit {
-                LiteralValue::Number(n) => { self.emit(OpCode::PushNumber(*n)); }
-                LiteralValue::String(s) => { self.emit(OpCode::PushString(s.clone())); }
-                LiteralValue::Boolean(b) => { self.emit(OpCode::PushBoolean(*b)); }
-                LiteralValue::Nil => { self.emit(OpCode::PushNil); }
+                LiteralValue::Number(n) => {
+                    self.emit(OpCode::PushNumber(*n));
+                }
+                LiteralValue::String(s) => {
+                    self.emit(OpCode::PushString(s.clone()));
+                }
+                LiteralValue::Boolean(b) => {
+                    self.emit(OpCode::PushBoolean(*b));
+                }
+                LiteralValue::Nil => {
+                    self.emit(OpCode::PushNil);
+                }
             },
-            
+
             Expression::Variable { name, .. } => {
                 self.borrow_variable(name, BorrowKind::Shared, expr.span);
 
                 if let Some(slot) = self.resolve_local(name) {
                     self.emit(OpCode::GetLocal(slot));
                 } else {
-                    self.error(&format!("Variable '{}' used but not declared.", name), expr.span);
+                    self.error(
+                        &format!("Variable '{}' used but not declared.", name),
+                        expr.span,
+                    );
                 }
             }
 
-            Expression::Binary { operator, left, right } => {
+            Expression::Binary {
+                operator,
+                left,
+                right,
+            } => {
                 self.compile_expression(left);
                 self.compile_expression(right);
                 match operator {
-                    BinaryOperator::Add => { self.emit(OpCode::Add); }
-                    BinaryOperator::Sub => { self.emit(OpCode::Sub); }
-                    BinaryOperator::Mul => { self.emit(OpCode::Mul); }
-                    BinaryOperator::Div => { self.emit(OpCode::Div); }
-                    BinaryOperator::Equal => { self.emit(OpCode::Equal); }
-                    BinaryOperator::NotEqual => { self.emit(OpCode::NotEqual); }
-                    BinaryOperator::LessThan => { self.emit(OpCode::LessThan); }
-                    BinaryOperator::GreaterThan => { self.emit(OpCode::GreaterThan); }
+                    BinaryOperator::Add => {
+                        self.emit(OpCode::Add);
+                    }
+                    BinaryOperator::Sub => {
+                        self.emit(OpCode::Sub);
+                    }
+                    BinaryOperator::Mul => {
+                        self.emit(OpCode::Mul);
+                    }
+                    BinaryOperator::Div => {
+                        self.emit(OpCode::Div);
+                    }
+                    BinaryOperator::Equal => {
+                        self.emit(OpCode::Equal);
+                    }
+                    BinaryOperator::NotEqual => {
+                        self.emit(OpCode::NotEqual);
+                    }
+                    BinaryOperator::LessThan => {
+                        self.emit(OpCode::LessThan);
+                    }
+                    BinaryOperator::GreaterThan => {
+                        self.emit(OpCode::GreaterThan);
+                    }
+                    BinaryOperator::And => {
+                        self.emit(OpCode::And);
+                    }
+                    BinaryOperator::Or => {
+                        self.emit(OpCode::Or);
+                    }
                     _ => todo!(),
                 };
             }
@@ -641,7 +743,7 @@ impl Generator {
             Expression::Unary { operator, right } => {
                 // Compile the inner expression onto the stack first
                 self.compile_expression(right);
-                
+
                 // Emit the correct modification opcode based on the operator type
                 match operator {
                     crate::parser::UnaryOperator::Minus => {
@@ -652,7 +754,7 @@ impl Generator {
                     }
                 }
             }
-            
+
             Expression::Array(elements) => {
                 for item in elements {
                     self.compile_expression(item);
@@ -674,12 +776,15 @@ impl Generator {
                             self.borrow_variable(obj_name, BorrowKind::Shared, expr.span);
                         }
 
-                        // Manually emit GetLocal for the variable object instead of 
+                        // Manually emit GetLocal for the variable object instead of
                         // calling compile_expression. This cuts off double-borrowing panics
                         if let Some(slot) = self.resolve_local(obj_name) {
                             self.emit(OpCode::GetLocal(slot));
                         } else {
-                            self.error(&format!("Variable '{}' used before declaration.", obj_name), expr.span);
+                            self.error(
+                                &format!("Variable '{}' used before declaration.", obj_name),
+                                expr.span,
+                            );
                         }
                     } else {
                         // Fallback manner for raw elements ( [1, 2].get(0) )
@@ -690,15 +795,15 @@ impl Generator {
                     for arg in arguments {
                         self.compile_expression(arg);
                     }
-                    
-                    self.emit(OpCode::CallMethod { 
-                        name: name.clone(), 
-                        arg_count: arguments.len() 
+
+                    self.emit(OpCode::CallMethod {
+                        name: name.clone(),
+                        arg_count: arguments.len(),
                     });
-                    
+
                     // Return early to balance statement execution frames
-                    return; 
-                } 
+                    return;
+                }
 
                 // --- Standalone Global Function Calls ( print(x), test_to_number() ) ---
                 if let Expression::Variable { name, .. } = &callee.kind {
@@ -706,19 +811,22 @@ impl Generator {
                     for arg in arguments {
                         self.compile_expression(arg);
                     }
-                    
+
                     self.emit(OpCode::CallFunction {
                         name: name.clone(),
                         arg_count: arguments.len(),
                     });
-                    return; 
-
                 } else {
-                    self.error("Dynamic/Anonymous function calls are not supported yet.", expr.span);
+                    self.error(
+                        "Dynamic/Anonymous function calls are not supported yet.",
+                        expr.span,
+                    );
                 }
             }
 
-            Expression::Get { .. } => panic!("Syntax Error: Properties must be explicitly evaluated through a Call context."),
+            Expression::Get { .. } => panic!(
+                "Syntax Error: Properties must be explicitly evaluated through a Call context."
+            ),
             _ => todo!("Got expression that is yet to be implemented."),
         }
     }

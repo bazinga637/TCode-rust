@@ -239,10 +239,17 @@ impl Parser {
         let mut var_type: String = "Undeclared".to_string();
 
         if self.peek() == Some(":") {
-            self.advance();
-            var_type = self.advance().expect("Expected type after ':' in variable declaration").value;
+            self.advance(); // consume ":"
+            let mut type_tokens = Vec::new();
+            
+            // Consume tokens until we find the assignment operator '='
+            while let Some(tok) = self.peek() {
+                if tok == "=" { break; }
+                type_tokens.push(self.advance().unwrap().value);
+            }
+            var_type = type_tokens.join(""); // Merges "List", "[", "int", "]" into "List[int]"
         }
-        
+
         assert!(self.match_token("="), "Expected '=' after variable name");
         let initializer = self.parse();
 
@@ -258,12 +265,9 @@ impl Parser {
         let start_span = self.peek_span();
 
         self.advance(); // consume "if"
-        assert!(self.match_token("("), "Expected '(' after 'if'");
 
         let condition = self.parse();
-        
-        assert!(self.match_token(")"), "Expected ')' after if condition");
-        
+
         let then_branch = Box::new(self.parse_statement());
         let mut else_branch = None;
         if self.match_token("else") {
@@ -280,11 +284,7 @@ impl Parser {
         let start_span = self.peek_span();
         self.advance(); // consume "match"
 
-        assert!(self.match_token("("), "Expected '(' after 'match' keyword");
         let target = self.parse(); // Parse the evaluation expression target
-        assert!(self.match_token(")"), "Expected ')' after match target expression");
-
-        assert!(self.match_token("{"), "Expected '{{' to open match block wrapper");
 
         let mut cases = Vec::new();
         let mut default_branch = None;
@@ -325,10 +325,8 @@ impl Parser {
         let start_span = self.peek_span();
         self.advance(); // consume "while"
 
-        assert!(self.match_token("("), "Expected '(' after 'while'");
         let condition = self.parse();
 
-        assert!(self.match_token(")"), "Expected ')' after while condition");
         let body = Box::new(self.parse_statement());
 
         StatementNode {
@@ -476,8 +474,54 @@ impl Parser {
     }
 
     // --- Expression Processing Rules ---
-    pub fn parse(&mut self) -> ExpressionNode { self.parse_comparison() }
+    // first
+    pub fn parse(&mut self) -> ExpressionNode { 
+        self.parse_logical_or() 
+    }
+    
+    // second
+    fn parse_logical_or(&mut self) -> ExpressionNode {
+        let mut left = self.parse_logical_and();
 
+        while self.peek() == Some("||") {
+            let start_span = left.span;
+            self.advance(); // consume "||"
+            let right = self.parse_logical_and();
+        
+            left = ExpressionNode {
+                span: start_span,
+                kind: Expression::Binary {
+                    operator: BinaryOperator::Or,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                },
+            };
+        }
+        left
+    }
+
+    // third
+    fn parse_logical_and(&mut self) -> ExpressionNode {
+        let mut left = self.parse_comparison();
+
+        while self.peek() == Some("&&") {
+            let start_span = left.span;
+            self.advance(); // consume "&&"
+            let right = self.parse_comparison();
+        
+            left = ExpressionNode {
+                span: start_span,
+                kind: Expression::Binary {
+                    operator: BinaryOperator::And,
+                    left: Box::new(left),
+                    right: Box::new(right),
+                },
+            };
+        }
+        left
+    }
+
+    // fourth
     fn parse_comparison(&mut self) -> ExpressionNode {
         let mut left = self.parse_additive();
 
@@ -509,6 +553,7 @@ impl Parser {
     }
 
     // Intercepts preceding '-' or '!' symbols before diving into literals
+    // seventh
     fn parse_unary(&mut self) -> ExpressionNode {
         if let Some(token) = self.peek() {
             let operator = match token {
@@ -523,7 +568,7 @@ impl Parser {
                 
                 // Recursively call parse_unary to correctly support chained elements like !!true
                 let right = self.parse_unary(); 
-                
+
                 return ExpressionNode {
                     span: start_span,
                     kind: Expression::Unary {
@@ -533,11 +578,11 @@ impl Parser {
                 };
             }
         }
-        
         // Fallback naturally to raw numbers/variables if no prefix matches
         self.parse_primary()
     }
-
+    
+    // fifth
     fn parse_additive(&mut self) -> ExpressionNode {
         let mut left = self.parse_multiplicative();
         while let Some(token) = self.peek() {
@@ -558,7 +603,8 @@ impl Parser {
         left
     }
 
-        fn parse_multiplicative(&mut self) -> ExpressionNode {
+    // sixth
+    fn parse_multiplicative(&mut self) -> ExpressionNode {
         // Route through our call & property loop interceptor
         let mut left = self.parse_call_or_member();
         while let Some(token) = self.peek() {

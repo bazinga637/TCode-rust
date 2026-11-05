@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "TCode-rust"
+name = "tcode-compiler"
 version = "0.1.0"

@@ -7,11 +7,14 @@ fn main() {
     test_unary()
 
 }
+// test native functions
 
 fn test_to_number() {
     let x = \"1\"
     let y = to_number(x).expect(\"to_number function failed\")
 }
+
+// test native methods
 
 fn test_append() {
     let mut x = []
@@ -19,22 +22,24 @@ fn test_append() {
     let z = 1
     x.append(y)
     x.append(z)
-    if (x != [\"a\", 1]) {
+    if x == [\"a\", 1] {
         panic(\"TestError: append method failed\")
     }
 }
 
+// test operations
+
 fn test_string_addition() {
     let x = \"hello\"
     let y = \" world\"
-    if (x+y != \"hello world\") {
+    if x+y != \"hello world\" {
         panic(\"TestError: String Addition failed.\")
     }
 }
 
 fn test_unary() {
     let x = -1
-    if (-x != 1) {
+    if -x != 1 {
         panic(\"TestError: NegUnary failed.\")
     }
     let x = false
@@ -170,931 +175,889 @@ fn test_unary() {
     Token {
         value: "fn",
         span: Span {
-            line: 11,
+            line: 12,
             column: 1,
         },
     },
     Token {
         value: "test_to_number",
         span: Span {
-            line: 11,
+            line: 12,
             column: 4,
         },
     },
     Token {
         value: "(",
         span: Span {
-            line: 11,
+            line: 12,
             column: 18,
         },
     },
     Token {
         value: ")",
         span: Span {
-            line: 11,
+            line: 12,
             column: 19,
         },
     },
     Token {
         value: "{",
         span: Span {
-            line: 11,
+            line: 12,
             column: 21,
         },
     },
     Token {
         value: "let",
         span: Span {
-            line: 12,
+            line: 13,
             column: 5,
         },
     },
     Token {
         value: "x",
         span: Span {
-            line: 12,
+            line: 13,
             column: 9,
         },
     },
     Token {
         value: "=",
         span: Span {
-            line: 12,
+            line: 13,
             column: 11,
         },
     },
     Token {
         value: "\"1\"",
         span: Span {
-            line: 12,
+            line: 13,
             column: 13,
         },
     },
     Token {
         value: "let",
         span: Span {
-            line: 13,
+            line: 14,
             column: 5,
         },
     },
     Token {
         value: "y",
         span: Span {
-            line: 13,
+            line: 14,
             column: 9,
         },
     },
     Token {
         value: "=",
         span: Span {
-            line: 13,
+            line: 14,
             column: 11,
         },
     },
     Token {
         value: "to_number",
         span: Span {
-            line: 13,
+            line: 14,
             column: 13,
         },
     },
     Token {
         value: "(",
         span: Span {
-            line: 13,
+            line: 14,
             column: 22,
         },
     },
     Token {
         value: "x",
         span: Span {
-            line: 13,
+            line: 14,
             column: 23,
         },
     },
     Token {
         value: ")",
         span: Span {
-            line: 13,
+            line: 14,
             column: 24,
         },
     },
     Token {
         value: ".",
         span: Span {
-            line: 13,
+            line: 14,
             column: 25,
         },
     },
     Token {
         value: "expect",
         span: Span {
-            line: 13,
+            line: 14,
             column: 26,
         },
     },
     Token {
         value: "(",
         span: Span {
-            line: 13,
+            line: 14,
             column: 32,
         },
     },
     Token {
         value: "\"to_number function failed\"",
         span: Span {
-            line: 13,
+            line: 14,
             column: 33,
         },
     },
     Token {
         value: ")",
         span: Span {
-            line: 13,
+            line: 14,
             column: 60,
         },
     },
     Token {
         value: "}",
         span: Span {
-            line: 14,
+            line: 15,
             column: 1,
         },
     },
     Token {
         value: "fn",
         span: Span {
-            line: 16,
+            line: 19,
             column: 1,
         },
     },
     Token {
         value: "test_append",
         span: Span {
-            line: 16,
+            line: 19,
             column: 4,
         },
     },
     Token {
         value: "(",
         span: Span {
-            line: 16,
+            line: 19,
             column: 15,
         },
     },
     Token {
         value: ")",
         span: Span {
-            line: 16,
+            line: 19,
             column: 16,
         },
     },
     Token {
         value: "{",
         span: Span {
-            line: 16,
+            line: 19,
             column: 18,
         },
     },
     Token {
         value: "let",
         span: Span {
-            line: 17,
+            line: 20,
             column: 5,
         },
     },
     Token {
         value: "mut",
         span: Span {
-            line: 17,
+            line: 20,
             column: 9,
         },
     },
     Token {
         value: "x",
         span: Span {
-            line: 17,
+            line: 20,
             column: 13,
         },
     },
     Token {
         value: "=",
         span: Span {
-            line: 17,
+            line: 20,
             column: 15,
         },
     },
     Token {
         value: "[",
         span: Span {
-            line: 17,
+            line: 20,
             column: 17,
         },
     },
     Token {
         value: "]",
         span: Span {
-            line: 17,
+            line: 20,
             column: 18,
         },
     },
     Token {
         value: "let",
         span: Span {
-            line: 18,
+            line: 21,
             column: 5,
         },
     },
     Token {
         value: "y",
         span: Span {
-            line: 18,
+            line: 21,
             column: 9,
         },
     },
     Token {
         value: "=",
         span: Span {
-            line: 18,
+            line: 21,
             column: 11,
         },
     },
     Token {
         value: "\"a\"",
         span: Span {
-            line: 18,
+            line: 21,
             column: 13,
         },
     },
     Token {
         value: "let",
         span: Span {
-            line: 19,
+            line: 22,
             column: 5,
         },
     },
     Token {
         value: "z",
         span: Span {
-            line: 19,
+            line: 22,
             column: 9,
         },
     },
     Token {
         value: "=",
         span: Span {
-            line: 19,
+            line: 22,
             column: 11,
         },
     },
     Token {
         value: "1",
         span: Span {
-            line: 19,
+            line: 22,
             column: 13,
         },
     },
     Token {
         value: "x",
         span: Span {
-            line: 20,
+            line: 23,
             column: 5,
         },
     },
     Token {
         value: ".",
         span: Span {
-            line: 20,
+            line: 23,
             column: 6,
         },
     },
     Token {
         value: "append",
         span: Span {
-            line: 20,
+            line: 23,
             column: 7,
         },
     },
     Token {
         value: "(",
         span: Span {
-            line: 20,
+            line: 23,
             column: 13,
         },
     },
     Token {
         value: "y",
         span: Span {
-            line: 20,
-            column: 14,
-        },
-    },
-    Token {
-        value: ")",
-        span: Span {
-            line: 20,
-            column: 15,
-        },
-    },
-    Token {
-        value: "x",
-        span: Span {
-            line: 21,
-            column: 5,
-        },
-    },
-    Token {
-        value: ".",
-        span: Span {
-            line: 21,
-            column: 6,
-        },
-    },
-    Token {
-        value: "append",
-        span: Span {
-            line: 21,
-            column: 7,
-        },
-    },
-    Token {
-        value: "(",
-        span: Span {
-            line: 21,
-            column: 13,
-        },
-    },
-    Token {
-        value: "z",
-        span: Span {
-            line: 21,
-            column: 14,
-        },
-    },
-    Token {
-        value: ")",
-        span: Span {
-            line: 21,
-            column: 15,
-        },
-    },
-    Token {
-        value: "if",
-        span: Span {
-            line: 22,
-            column: 5,
-        },
-    },
-    Token {
-        value: "(",
-        span: Span {
-            line: 22,
-            column: 8,
-        },
-    },
-    Token {
-        value: "x",
-        span: Span {
-            line: 22,
-            column: 9,
-        },
-    },
-    Token {
-        value: "!=",
-        span: Span {
-            line: 22,
-            column: 11,
-        },
-    },
-    Token {
-        value: "[",
-        span: Span {
-            line: 22,
-            column: 14,
-        },
-    },
-    Token {
-        value: "\"a\"",
-        span: Span {
-            line: 22,
-            column: 15,
-        },
-    },
-    Token {
-        value: ",",
-        span: Span {
-            line: 22,
-            column: 18,
-        },
-    },
-    Token {
-        value: "1",
-        span: Span {
-            line: 22,
-            column: 20,
-        },
-    },
-    Token {
-        value: "]",
-        span: Span {
-            line: 22,
-            column: 21,
-        },
-    },
-    Token {
-        value: ")",
-        span: Span {
-            line: 22,
-            column: 22,
-        },
-    },
-    Token {
-        value: "{",
-        span: Span {
-            line: 22,
-            column: 24,
-        },
-    },
-    Token {
-        value: "panic",
-        span: Span {
-            line: 23,
-            column: 9,
-        },
-    },
-    Token {
-        value: "(",
-        span: Span {
             line: 23,
             column: 14,
         },
     },
     Token {
-        value: "\"TestError: append method failed\"",
+        value: ")",
         span: Span {
             line: 23,
             column: 15,
         },
     },
     Token {
-        value: ")",
-        span: Span {
-            line: 23,
-            column: 48,
-        },
-    },
-    Token {
-        value: "}",
+        value: "x",
         span: Span {
             line: 24,
             column: 5,
         },
     },
     Token {
-        value: "}",
+        value: ".",
+        span: Span {
+            line: 24,
+            column: 6,
+        },
+    },
+    Token {
+        value: "append",
+        span: Span {
+            line: 24,
+            column: 7,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 24,
+            column: 13,
+        },
+    },
+    Token {
+        value: "z",
+        span: Span {
+            line: 24,
+            column: 14,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 24,
+            column: 15,
+        },
+    },
+    Token {
+        value: "if",
         span: Span {
             line: 25,
+            column: 5,
+        },
+    },
+    Token {
+        value: "x",
+        span: Span {
+            line: 25,
+            column: 8,
+        },
+    },
+    Token {
+        value: "==",
+        span: Span {
+            line: 25,
+            column: 10,
+        },
+    },
+    Token {
+        value: "[",
+        span: Span {
+            line: 25,
+            column: 13,
+        },
+    },
+    Token {
+        value: "\"a\"",
+        span: Span {
+            line: 25,
+            column: 14,
+        },
+    },
+    Token {
+        value: ",",
+        span: Span {
+            line: 25,
+            column: 17,
+        },
+    },
+    Token {
+        value: "1",
+        span: Span {
+            line: 25,
+            column: 19,
+        },
+    },
+    Token {
+        value: "]",
+        span: Span {
+            line: 25,
+            column: 20,
+        },
+    },
+    Token {
+        value: "{",
+        span: Span {
+            line: 25,
+            column: 22,
+        },
+    },
+    Token {
+        value: "panic",
+        span: Span {
+            line: 26,
+            column: 9,
+        },
+    },
+    Token {
+        value: "(",
+        span: Span {
+            line: 26,
+            column: 14,
+        },
+    },
+    Token {
+        value: "\"TestError: append method failed\"",
+        span: Span {
+            line: 26,
+            column: 15,
+        },
+    },
+    Token {
+        value: ")",
+        span: Span {
+            line: 26,
+            column: 48,
+        },
+    },
+    Token {
+        value: "}",
+        span: Span {
+            line: 27,
+            column: 5,
+        },
+    },
+    Token {
+        value: "}",
+        span: Span {
+            line: 28,
             column: 1,
         },
     },
     Token {
         value: "fn",
         span: Span {
-            line: 27,
+            line: 32,
             column: 1,
         },
     },
     Token {
         value: "test_string_addition",
         span: Span {
-            line: 27,
+            line: 32,
             column: 4,
         },
     },
     Token {
         value: "(",
         span: Span {
-            line: 27,
+            line: 32,
             column: 24,
         },
     },
     Token {
         value: ")",
         span: Span {
-            line: 27,
+            line: 32,
             column: 25,
         },
     },
     Token {
         value: "{",
         span: Span {
-            line: 27,
+            line: 32,
             column: 27,
         },
     },
     Token {
         value: "let",
         span: Span {
-            line: 28,
+            line: 33,
             column: 5,
         },
     },
     Token {
         value: "x",
         span: Span {
-            line: 28,
+            line: 33,
             column: 9,
         },
     },
     Token {
         value: "=",
         span: Span {
-            line: 28,
+            line: 33,
             column: 11,
         },
     },
     Token {
         value: "\"hello\"",
         span: Span {
-            line: 28,
+            line: 33,
             column: 13,
         },
     },
     Token {
         value: "let",
         span: Span {
-            line: 29,
+            line: 34,
             column: 5,
         },
     },
     Token {
         value: "y",
         span: Span {
-            line: 29,
+            line: 34,
             column: 9,
         },
     },
     Token {
         value: "=",
         span: Span {
-            line: 29,
+            line: 34,
             column: 11,
         },
     },
     Token {
         value: "\" world\"",
         span: Span {
-            line: 29,
+            line: 34,
             column: 13,
         },
     },
     Token {
         value: "if",
         span: Span {
-            line: 30,
+            line: 35,
             column: 5,
-        },
-    },
-    Token {
-        value: "(",
-        span: Span {
-            line: 30,
-            column: 8,
         },
     },
     Token {
         value: "x",
         span: Span {
-            line: 30,
-            column: 9,
+            line: 35,
+            column: 8,
         },
     },
     Token {
         value: "+",
         span: Span {
-            line: 30,
-            column: 10,
+            line: 35,
+            column: 9,
         },
     },
     Token {
         value: "y",
         span: Span {
-            line: 30,
-            column: 11,
+            line: 35,
+            column: 10,
         },
     },
     Token {
         value: "!=",
         span: Span {
-            line: 30,
-            column: 13,
+            line: 35,
+            column: 12,
         },
     },
     Token {
         value: "\"hello world\"",
         span: Span {
-            line: 30,
-            column: 16,
-        },
-    },
-    Token {
-        value: ")",
-        span: Span {
-            line: 30,
-            column: 29,
+            line: 35,
+            column: 15,
         },
     },
     Token {
         value: "{",
         span: Span {
-            line: 30,
-            column: 31,
+            line: 35,
+            column: 29,
         },
     },
     Token {
         value: "panic",
         span: Span {
-            line: 31,
+            line: 36,
             column: 9,
         },
     },
     Token {
         value: "(",
         span: Span {
-            line: 31,
+            line: 36,
             column: 14,
         },
     },
     Token {
         value: "\"TestError: String Addition failed.\"",
         span: Span {
-            line: 31,
+            line: 36,
             column: 15,
         },
     },
     Token {
         value: ")",
         span: Span {
-            line: 31,
+            line: 36,
             column: 51,
         },
     },
     Token {
         value: "}",
         span: Span {
-            line: 32,
+            line: 37,
             column: 5,
         },
     },
     Token {
         value: "}",
         span: Span {
-            line: 33,
+            line: 38,
             column: 1,
         },
     },
     Token {
         value: "fn",
         span: Span {
-            line: 35,
+            line: 40,
             column: 1,
         },
     },
     Token {
         value: "test_unary",
         span: Span {
-            line: 35,
+            line: 40,
             column: 4,
         },
     },
     Token {
         value: "(",
         span: Span {
-            line: 35,
+            line: 40,
             column: 14,
         },
     },
     Token {
         value: ")",
         span: Span {
-            line: 35,
+            line: 40,
             column: 15,
         },
     },
     Token {
         value: "{",
         span: Span {
-            line: 35,
+            line: 40,
             column: 17,
         },
     },
     Token {
         value: "let",
         span: Span {
-            line: 36,
+            line: 41,
             column: 5,
         },
     },
     Token {
         value: "x",
         span: Span {
-            line: 36,
+            line: 41,
             column: 9,
         },
     },
     Token {
         value: "=",
         span: Span {
-            line: 36,
+            line: 41,
             column: 11,
         },
     },
     Token {
         value: "-",
         span: Span {
-            line: 36,
+            line: 41,
             column: 13,
         },
     },
     Token {
         value: "1",
         span: Span {
-            line: 36,
+            line: 41,
             column: 14,
         },
     },
     Token {
         value: "if",
         span: Span {
-            line: 37,
+            line: 42,
             column: 5,
-        },
-    },
-    Token {
-        value: "(",
-        span: Span {
-            line: 37,
-            column: 8,
         },
     },
     Token {
         value: "-",
         span: Span {
-            line: 37,
-            column: 9,
+            line: 42,
+            column: 8,
         },
     },
     Token {
         value: "x",
         span: Span {
-            line: 37,
-            column: 10,
+            line: 42,
+            column: 9,
         },
     },
     Token {
         value: "!=",
         span: Span {
-            line: 37,
-            column: 12,
+            line: 42,
+            column: 11,
         },
     },
     Token {
         value: "1",
         span: Span {
-            line: 37,
-            column: 15,
-        },
-    },
-    Token {
-        value: ")",
-        span: Span {
-            line: 37,
-            column: 16,
+            line: 42,
+            column: 14,
         },
     },
     Token {
         value: "{",
         span: Span {
-            line: 37,
-            column: 18,
+            line: 42,
+            column: 16,
         },
     },
     Token {
         value: "panic",
         span: Span {
-            line: 38,
+            line: 43,
             column: 9,
         },
     },
     Token {
         value: "(",
         span: Span {
-            line: 38,
+            line: 43,
             column: 14,
         },
     },
     Token {
         value: "\"TestError: NegUnary failed.\"",
         span: Span {
-            line: 38,
+            line: 43,
             column: 15,
         },
     },
     Token {
         value: ")",
         span: Span {
-            line: 38,
+            line: 43,
             column: 44,
         },
     },
     Token {
         value: "}",
         span: Span {
-            line: 39,
+            line: 44,
             column: 5,
         },
     },
     Token {
         value: "let",
         span: Span {
-            line: 40,
+            line: 45,
             column: 5,
         },
     },
     Token {
         value: "x",
         span: Span {
-            line: 40,
+            line: 45,
             column: 9,
         },
     },
     Token {
         value: "=",
         span: Span {
-            line: 40,
+            line: 45,
             column: 11,
         },
     },
     Token {
         value: "false",
         span: Span {
-            line: 40,
+            line: 45,
             column: 13,
         },
     },
     Token {
         value: "!",
         span: Span {
-            line: 41,
+            line: 46,
             column: 5,
         },
     },
     Token {
         value: "x",
         span: Span {
-            line: 41,
+            line: 46,
             column: 6,
         },
     },
     Token {
         value: ".",
         span: Span {
-            line: 41,
+            line: 46,
             column: 7,
         },
     },
     Token {
         value: "expect",
         span: Span {
-            line: 41,
+            line: 46,
             column: 8,
         },
     },
     Token {
         value: "(",
         span: Span {
-            line: 41,
+            line: 46,
             column: 14,
         },
     },
     Token {
         value: "\"TestError: NotUnary failed.\"",
         span: Span {
-            line: 41,
+            line: 46,
             column: 15,
         },
     },
     Token {
         value: ")",
         span: Span {
-            line: 41,
+            line: 46,
             column: 44,
         },
     },
     Token {
         value: "}",
         span: Span {
-            line: 42,
+            line: 47,
             column: 1,
         },
     },
@@ -1222,7 +1185,7 @@ fn test_unary() {
         },
         StatementNode {
             span: Span {
-                line: 11,
+                line: 12,
                 column: 1,
             },
             kind: FunctionDeclaration {
@@ -1231,7 +1194,7 @@ fn test_unary() {
                 body: [
                     StatementNode {
                         span: Span {
-                            line: 12,
+                            line: 13,
                             column: 5,
                         },
                         kind: VarDeclaration {
@@ -1239,7 +1202,7 @@ fn test_unary() {
                             var_type: "Undeclared",
                             initializer: ExpressionNode {
                                 span: Span {
-                                    line: 12,
+                                    line: 13,
                                     column: 13,
                                 },
                                 kind: Literal(
@@ -1253,7 +1216,7 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 13,
+                            line: 14,
                             column: 5,
                         },
                         kind: VarDeclaration {
@@ -1261,25 +1224,25 @@ fn test_unary() {
                             var_type: "Undeclared",
                             initializer: ExpressionNode {
                                 span: Span {
-                                    line: 13,
+                                    line: 14,
                                     column: 13,
                                 },
                                 kind: Call {
                                     callee: ExpressionNode {
                                         span: Span {
-                                            line: 13,
+                                            line: 14,
                                             column: 13,
                                         },
                                         kind: Get {
                                             object: ExpressionNode {
                                                 span: Span {
-                                                    line: 13,
+                                                    line: 14,
                                                     column: 13,
                                                 },
                                                 kind: Call {
                                                     callee: ExpressionNode {
                                                         span: Span {
-                                                            line: 13,
+                                                            line: 14,
                                                             column: 13,
                                                         },
                                                         kind: Variable {
@@ -1290,7 +1253,7 @@ fn test_unary() {
                                                     arguments: [
                                                         ExpressionNode {
                                                             span: Span {
-                                                                line: 13,
+                                                                line: 14,
                                                                 column: 23,
                                                             },
                                                             kind: Variable {
@@ -1307,7 +1270,7 @@ fn test_unary() {
                                     arguments: [
                                         ExpressionNode {
                                             span: Span {
-                                                line: 13,
+                                                line: 14,
                                                 column: 33,
                                             },
                                             kind: Literal(
@@ -1327,7 +1290,7 @@ fn test_unary() {
         },
         StatementNode {
             span: Span {
-                line: 16,
+                line: 19,
                 column: 1,
             },
             kind: FunctionDeclaration {
@@ -1336,7 +1299,7 @@ fn test_unary() {
                 body: [
                     StatementNode {
                         span: Span {
-                            line: 17,
+                            line: 20,
                             column: 5,
                         },
                         kind: VarDeclaration {
@@ -1344,7 +1307,7 @@ fn test_unary() {
                             var_type: "Undeclared",
                             initializer: ExpressionNode {
                                 span: Span {
-                                    line: 17,
+                                    line: 20,
                                     column: 17,
                                 },
                                 kind: Array(
@@ -1356,7 +1319,7 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 18,
+                            line: 21,
                             column: 5,
                         },
                         kind: VarDeclaration {
@@ -1364,7 +1327,7 @@ fn test_unary() {
                             var_type: "Undeclared",
                             initializer: ExpressionNode {
                                 span: Span {
-                                    line: 18,
+                                    line: 21,
                                     column: 13,
                                 },
                                 kind: Literal(
@@ -1378,7 +1341,7 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 19,
+                            line: 22,
                             column: 5,
                         },
                         kind: VarDeclaration {
@@ -1386,7 +1349,7 @@ fn test_unary() {
                             var_type: "Undeclared",
                             initializer: ExpressionNode {
                                 span: Span {
-                                    line: 19,
+                                    line: 22,
                                     column: 13,
                                 },
                                 kind: Literal(
@@ -1400,25 +1363,25 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 20,
+                            line: 23,
                             column: 5,
                         },
                         kind: Expression(
                             ExpressionNode {
                                 span: Span {
-                                    line: 20,
+                                    line: 23,
                                     column: 5,
                                 },
                                 kind: Call {
                                     callee: ExpressionNode {
                                         span: Span {
-                                            line: 20,
+                                            line: 23,
                                             column: 5,
                                         },
                                         kind: Get {
                                             object: ExpressionNode {
                                                 span: Span {
-                                                    line: 20,
+                                                    line: 23,
                                                     column: 5,
                                                 },
                                                 kind: Variable {
@@ -1432,7 +1395,7 @@ fn test_unary() {
                                     arguments: [
                                         ExpressionNode {
                                             span: Span {
-                                                line: 20,
+                                                line: 23,
                                                 column: 14,
                                             },
                                             kind: Variable {
@@ -1447,25 +1410,25 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 21,
+                            line: 24,
                             column: 5,
                         },
                         kind: Expression(
                             ExpressionNode {
                                 span: Span {
-                                    line: 21,
+                                    line: 24,
                                     column: 5,
                                 },
                                 kind: Call {
                                     callee: ExpressionNode {
                                         span: Span {
-                                            line: 21,
+                                            line: 24,
                                             column: 5,
                                         },
                                         kind: Get {
                                             object: ExpressionNode {
                                                 span: Span {
-                                                    line: 21,
+                                                    line: 24,
                                                     column: 5,
                                                 },
                                                 kind: Variable {
@@ -1479,7 +1442,7 @@ fn test_unary() {
                                     arguments: [
                                         ExpressionNode {
                                             span: Span {
-                                                line: 21,
+                                                line: 24,
                                                 column: 14,
                                             },
                                             kind: Variable {
@@ -1494,21 +1457,21 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 22,
+                            line: 25,
                             column: 5,
                         },
                         kind: If {
                             condition: ExpressionNode {
                                 span: Span {
-                                    line: 22,
-                                    column: 9,
+                                    line: 25,
+                                    column: 8,
                                 },
                                 kind: Binary {
-                                    operator: NotEqual,
+                                    operator: Equal,
                                     left: ExpressionNode {
                                         span: Span {
-                                            line: 22,
-                                            column: 9,
+                                            line: 25,
+                                            column: 8,
                                         },
                                         kind: Variable {
                                             name: "x",
@@ -1517,15 +1480,15 @@ fn test_unary() {
                                     },
                                     right: ExpressionNode {
                                         span: Span {
-                                            line: 22,
-                                            column: 14,
+                                            line: 25,
+                                            column: 13,
                                         },
                                         kind: Array(
                                             [
                                                 ExpressionNode {
                                                     span: Span {
-                                                        line: 22,
-                                                        column: 15,
+                                                        line: 25,
+                                                        column: 14,
                                                     },
                                                     kind: Literal(
                                                         String(
@@ -1535,8 +1498,8 @@ fn test_unary() {
                                                 },
                                                 ExpressionNode {
                                                     span: Span {
-                                                        line: 22,
-                                                        column: 20,
+                                                        line: 25,
+                                                        column: 19,
                                                     },
                                                     kind: Literal(
                                                         Number(
@@ -1551,26 +1514,26 @@ fn test_unary() {
                             },
                             then_branch: StatementNode {
                                 span: Span {
-                                    line: 22,
-                                    column: 24,
+                                    line: 25,
+                                    column: 22,
                                 },
                                 kind: Block(
                                     [
                                         StatementNode {
                                             span: Span {
-                                                line: 23,
+                                                line: 26,
                                                 column: 9,
                                             },
                                             kind: Expression(
                                                 ExpressionNode {
                                                     span: Span {
-                                                        line: 23,
+                                                        line: 26,
                                                         column: 9,
                                                     },
                                                     kind: Call {
                                                         callee: ExpressionNode {
                                                             span: Span {
-                                                                line: 23,
+                                                                line: 26,
                                                                 column: 9,
                                                             },
                                                             kind: Variable {
@@ -1581,7 +1544,7 @@ fn test_unary() {
                                                         arguments: [
                                                             ExpressionNode {
                                                                 span: Span {
-                                                                    line: 23,
+                                                                    line: 26,
                                                                     column: 15,
                                                                 },
                                                                 kind: Literal(
@@ -1606,7 +1569,7 @@ fn test_unary() {
         },
         StatementNode {
             span: Span {
-                line: 27,
+                line: 32,
                 column: 1,
             },
             kind: FunctionDeclaration {
@@ -1615,7 +1578,7 @@ fn test_unary() {
                 body: [
                     StatementNode {
                         span: Span {
-                            line: 28,
+                            line: 33,
                             column: 5,
                         },
                         kind: VarDeclaration {
@@ -1623,7 +1586,7 @@ fn test_unary() {
                             var_type: "Undeclared",
                             initializer: ExpressionNode {
                                 span: Span {
-                                    line: 28,
+                                    line: 33,
                                     column: 13,
                                 },
                                 kind: Literal(
@@ -1637,7 +1600,7 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 29,
+                            line: 34,
                             column: 5,
                         },
                         kind: VarDeclaration {
@@ -1645,7 +1608,7 @@ fn test_unary() {
                             var_type: "Undeclared",
                             initializer: ExpressionNode {
                                 span: Span {
-                                    line: 29,
+                                    line: 34,
                                     column: 13,
                                 },
                                 kind: Literal(
@@ -1659,28 +1622,28 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 30,
+                            line: 35,
                             column: 5,
                         },
                         kind: If {
                             condition: ExpressionNode {
                                 span: Span {
-                                    line: 30,
-                                    column: 9,
+                                    line: 35,
+                                    column: 8,
                                 },
                                 kind: Binary {
                                     operator: NotEqual,
                                     left: ExpressionNode {
                                         span: Span {
-                                            line: 30,
-                                            column: 9,
+                                            line: 35,
+                                            column: 8,
                                         },
                                         kind: Binary {
                                             operator: Add,
                                             left: ExpressionNode {
                                                 span: Span {
-                                                    line: 30,
-                                                    column: 9,
+                                                    line: 35,
+                                                    column: 8,
                                                 },
                                                 kind: Variable {
                                                     name: "x",
@@ -1689,8 +1652,8 @@ fn test_unary() {
                                             },
                                             right: ExpressionNode {
                                                 span: Span {
-                                                    line: 30,
-                                                    column: 11,
+                                                    line: 35,
+                                                    column: 10,
                                                 },
                                                 kind: Variable {
                                                     name: "y",
@@ -1701,8 +1664,8 @@ fn test_unary() {
                                     },
                                     right: ExpressionNode {
                                         span: Span {
-                                            line: 30,
-                                            column: 16,
+                                            line: 35,
+                                            column: 15,
                                         },
                                         kind: Literal(
                                             String(
@@ -1714,26 +1677,26 @@ fn test_unary() {
                             },
                             then_branch: StatementNode {
                                 span: Span {
-                                    line: 30,
-                                    column: 31,
+                                    line: 35,
+                                    column: 29,
                                 },
                                 kind: Block(
                                     [
                                         StatementNode {
                                             span: Span {
-                                                line: 31,
+                                                line: 36,
                                                 column: 9,
                                             },
                                             kind: Expression(
                                                 ExpressionNode {
                                                     span: Span {
-                                                        line: 31,
+                                                        line: 36,
                                                         column: 9,
                                                     },
                                                     kind: Call {
                                                         callee: ExpressionNode {
                                                             span: Span {
-                                                                line: 31,
+                                                                line: 36,
                                                                 column: 9,
                                                             },
                                                             kind: Variable {
@@ -1744,7 +1707,7 @@ fn test_unary() {
                                                         arguments: [
                                                             ExpressionNode {
                                                                 span: Span {
-                                                                    line: 31,
+                                                                    line: 36,
                                                                     column: 15,
                                                                 },
                                                                 kind: Literal(
@@ -1769,7 +1732,7 @@ fn test_unary() {
         },
         StatementNode {
             span: Span {
-                line: 35,
+                line: 40,
                 column: 1,
             },
             kind: FunctionDeclaration {
@@ -1778,7 +1741,7 @@ fn test_unary() {
                 body: [
                     StatementNode {
                         span: Span {
-                            line: 36,
+                            line: 41,
                             column: 5,
                         },
                         kind: VarDeclaration {
@@ -1786,14 +1749,14 @@ fn test_unary() {
                             var_type: "Undeclared",
                             initializer: ExpressionNode {
                                 span: Span {
-                                    line: 36,
+                                    line: 41,
                                     column: 13,
                                 },
                                 kind: Unary {
                                     operator: Minus,
                                     right: ExpressionNode {
                                         span: Span {
-                                            line: 36,
+                                            line: 41,
                                             column: 14,
                                         },
                                         kind: Literal(
@@ -1809,28 +1772,28 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 37,
+                            line: 42,
                             column: 5,
                         },
                         kind: If {
                             condition: ExpressionNode {
                                 span: Span {
-                                    line: 37,
-                                    column: 9,
+                                    line: 42,
+                                    column: 8,
                                 },
                                 kind: Binary {
                                     operator: NotEqual,
                                     left: ExpressionNode {
                                         span: Span {
-                                            line: 37,
-                                            column: 9,
+                                            line: 42,
+                                            column: 8,
                                         },
                                         kind: Unary {
                                             operator: Minus,
                                             right: ExpressionNode {
                                                 span: Span {
-                                                    line: 37,
-                                                    column: 10,
+                                                    line: 42,
+                                                    column: 9,
                                                 },
                                                 kind: Variable {
                                                     name: "x",
@@ -1841,8 +1804,8 @@ fn test_unary() {
                                     },
                                     right: ExpressionNode {
                                         span: Span {
-                                            line: 37,
-                                            column: 15,
+                                            line: 42,
+                                            column: 14,
                                         },
                                         kind: Literal(
                                             Number(
@@ -1854,26 +1817,26 @@ fn test_unary() {
                             },
                             then_branch: StatementNode {
                                 span: Span {
-                                    line: 37,
-                                    column: 18,
+                                    line: 42,
+                                    column: 16,
                                 },
                                 kind: Block(
                                     [
                                         StatementNode {
                                             span: Span {
-                                                line: 38,
+                                                line: 43,
                                                 column: 9,
                                             },
                                             kind: Expression(
                                                 ExpressionNode {
                                                     span: Span {
-                                                        line: 38,
+                                                        line: 43,
                                                         column: 9,
                                                     },
                                                     kind: Call {
                                                         callee: ExpressionNode {
                                                             span: Span {
-                                                                line: 38,
+                                                                line: 43,
                                                                 column: 9,
                                                             },
                                                             kind: Variable {
@@ -1884,7 +1847,7 @@ fn test_unary() {
                                                         arguments: [
                                                             ExpressionNode {
                                                                 span: Span {
-                                                                    line: 38,
+                                                                    line: 43,
                                                                     column: 15,
                                                                 },
                                                                 kind: Literal(
@@ -1906,7 +1869,7 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 40,
+                            line: 45,
                             column: 5,
                         },
                         kind: VarDeclaration {
@@ -1914,7 +1877,7 @@ fn test_unary() {
                             var_type: "Undeclared",
                             initializer: ExpressionNode {
                                 span: Span {
-                                    line: 40,
+                                    line: 45,
                                     column: 13,
                                 },
                                 kind: Literal(
@@ -1928,32 +1891,32 @@ fn test_unary() {
                     },
                     StatementNode {
                         span: Span {
-                            line: 41,
+                            line: 46,
                             column: 5,
                         },
                         kind: Expression(
                             ExpressionNode {
                                 span: Span {
-                                    line: 41,
+                                    line: 46,
                                     column: 5,
                                 },
                                 kind: Call {
                                     callee: ExpressionNode {
                                         span: Span {
-                                            line: 41,
+                                            line: 46,
                                             column: 5,
                                         },
                                         kind: Get {
                                             object: ExpressionNode {
                                                 span: Span {
-                                                    line: 41,
+                                                    line: 46,
                                                     column: 5,
                                                 },
                                                 kind: Unary {
                                                     operator: Not,
                                                     right: ExpressionNode {
                                                         span: Span {
-                                                            line: 41,
+                                                            line: 46,
                                                             column: 6,
                                                         },
                                                         kind: Variable {
@@ -1969,7 +1932,7 @@ fn test_unary() {
                                     arguments: [
                                         ExpressionNode {
                                             span: Span {
-                                                line: 41,
+                                                line: 46,
                                                 column: 15,
                                             },
                                             kind: Literal(
@@ -1988,19 +1951,43 @@ fn test_unary() {
         },
     ],
 }[
+    LineUpdate(
+        Span {
+            line: 2,
+            column: 1,
+        },
+    ),
     Jump(
-        9,
+        13,
+    ),
+    LineUpdate(
+        Span {
+            line: 4,
+            column: 5,
+        },
     ),
     CallFunction {
         name: "test_to_number",
         arg_count: 0,
     },
     Pop,
+    LineUpdate(
+        Span {
+            line: 5,
+            column: 5,
+        },
+    ),
     CallFunction {
         name: "test_append",
         arg_count: 0,
     },
     Pop,
+    LineUpdate(
+        Span {
+            line: 6,
+            column: 5,
+        },
+    ),
     CallFunction {
         name: "test_string_addition",
         arg_count: 0,
@@ -2011,14 +1998,32 @@ fn test_unary() {
         arg_count: 0,
     },
     Return,
+    LineUpdate(
+        Span {
+            line: 12,
+            column: 1,
+        },
+    ),
     Jump(
-        19,
+        26,
+    ),
+    LineUpdate(
+        Span {
+            line: 13,
+            column: 5,
+        },
     ),
     PushString(
         "1",
     ),
     SetLocal(
         0,
+    ),
+    LineUpdate(
+        Span {
+            line: 14,
+            column: 5,
+        },
     ),
     GetLocal(
         0,
@@ -2039,8 +2044,20 @@ fn test_unary() {
     ),
     PushNil,
     Return,
+    LineUpdate(
+        Span {
+            line: 19,
+            column: 1,
+        },
+    ),
     Jump(
-        45,
+        61,
+    ),
+    LineUpdate(
+        Span {
+            line: 20,
+            column: 5,
+        },
     ),
     BuildArray(
         0,
@@ -2048,17 +2065,35 @@ fn test_unary() {
     SetLocal(
         0,
     ),
+    LineUpdate(
+        Span {
+            line: 21,
+            column: 5,
+        },
+    ),
     PushString(
         "a",
     ),
     SetLocal(
         1,
     ),
+    LineUpdate(
+        Span {
+            line: 22,
+            column: 5,
+        },
+    ),
     PushNumber(
         1.0,
     ),
     SetLocal(
         2,
+    ),
+    LineUpdate(
+        Span {
+            line: 23,
+            column: 5,
+        },
     ),
     GetLocal(
         0,
@@ -2071,6 +2106,12 @@ fn test_unary() {
         arg_count: 1,
     },
     Pop,
+    LineUpdate(
+        Span {
+            line: 24,
+            column: 5,
+        },
+    ),
     GetLocal(
         0,
     ),
@@ -2082,6 +2123,12 @@ fn test_unary() {
         arg_count: 1,
     },
     Pop,
+    LineUpdate(
+        Span {
+            line: 25,
+            column: 5,
+        },
+    ),
     GetLocal(
         0,
     ),
@@ -2094,9 +2141,21 @@ fn test_unary() {
     BuildArray(
         2,
     ),
-    NotEqual,
+    Equal,
     JumpIfFalse(
-        43,
+        59,
+    ),
+    LineUpdate(
+        Span {
+            line: 25,
+            column: 22,
+        },
+    ),
+    LineUpdate(
+        Span {
+            line: 26,
+            column: 9,
+        },
     ),
     PushString(
         "TestError: append method failed",
@@ -2108,8 +2167,20 @@ fn test_unary() {
     Pop,
     PushNil,
     Return,
+    LineUpdate(
+        Span {
+            line: 32,
+            column: 1,
+        },
+    ),
     Jump(
-        61,
+        83,
+    ),
+    LineUpdate(
+        Span {
+            line: 33,
+            column: 5,
+        },
     ),
     PushString(
         "hello",
@@ -2117,11 +2188,23 @@ fn test_unary() {
     SetLocal(
         0,
     ),
+    LineUpdate(
+        Span {
+            line: 34,
+            column: 5,
+        },
+    ),
     PushString(
         " world",
     ),
     SetLocal(
         1,
+    ),
+    LineUpdate(
+        Span {
+            line: 35,
+            column: 5,
+        },
     ),
     GetLocal(
         0,
@@ -2135,7 +2218,19 @@ fn test_unary() {
     ),
     NotEqual,
     JumpIfFalse(
-        59,
+        81,
+    ),
+    LineUpdate(
+        Span {
+            line: 35,
+            column: 29,
+        },
+    ),
+    LineUpdate(
+        Span {
+            line: 36,
+            column: 9,
+        },
     ),
     PushString(
         "TestError: String Addition failed.",
@@ -2147,8 +2242,20 @@ fn test_unary() {
     Pop,
     PushNil,
     Return,
+    LineUpdate(
+        Span {
+            line: 40,
+            column: 1,
+        },
+    ),
     Jump(
-        80,
+        108,
+    ),
+    LineUpdate(
+        Span {
+            line: 41,
+            column: 5,
+        },
     ),
     PushNumber(
         1.0,
@@ -2156,6 +2263,12 @@ fn test_unary() {
     Negate,
     SetLocal(
         0,
+    ),
+    LineUpdate(
+        Span {
+            line: 42,
+            column: 5,
+        },
     ),
     GetLocal(
         0,
@@ -2166,7 +2279,19 @@ fn test_unary() {
     ),
     NotEqual,
     JumpIfFalse(
-        73,
+        100,
+    ),
+    LineUpdate(
+        Span {
+            line: 42,
+            column: 16,
+        },
+    ),
+    LineUpdate(
+        Span {
+            line: 43,
+            column: 9,
+        },
     ),
     PushString(
         "TestError: NegUnary failed.",
@@ -2176,6 +2301,12 @@ fn test_unary() {
         arg_count: 1,
     },
     Pop,
+    LineUpdate(
+        Span {
+            line: 45,
+            column: 5,
+        },
+    ),
     PushBoolean(
         false,
     ),

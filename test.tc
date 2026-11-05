@@ -22,7 +22,7 @@ fn test_append() {
     let z = 1
     x.append(y)
     x.append(z)
-    if (x != ["a", 1]) {
+    if x == ["a", 1] {
         panic("TestError: append method failed")
     }
 }
@@ -32,14 +32,14 @@ fn test_append() {
 fn test_string_addition() {
     let x = "hello"
     let y = " world"
-    if (x+y != "hello world") {
+    if x+y != "hello world" {
         panic("TestError: String Addition failed.")
     }
 }
 
 fn test_unary() {
     let x = -1
-    if (-x != 1) {
+    if -x != 1 {
         panic("TestError: NegUnary failed.")
     }
     let x = false

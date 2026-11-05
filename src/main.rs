@@ -11,11 +11,12 @@ mod interpreter;
 use interpreter::Interpreter;
 
 mod nativefns;
-mod nativemthds; 
-
-use std::fs;
+mod nativemthds;
 
 use std::env;
+use std::fs;
+
+use std::path::Path;
 
 fn main() {
     let _ = File::create(".log"); // wipes log file after each run
@@ -23,22 +24,49 @@ fn main() {
     // collect all command-line arguments passed to the program
     let args: Vec<String> = env::args().collect();
 
+    let mut target_filename = None;
+
+    for arg in args.iter().skip(1) {
+        match arg.as_str() {
+            "--test" => (),
+
+            _ => {
+                // If it doesn't look like a flag, treat it as our source code filename
+                if target_filename.is_none() {
+                    target_filename = Some(arg);
+                }
+            }
+        }
+    }
     // check if a filename was actually provided
-    // args[0] is always the path to the generator executable itself. 
+    // args[0] is always the path to the generator executable itself.
     // args[1] will be the user's input file path.
-    if args.len() < 2 {
-        println!("Usage: cargo run <filename.tc>");
-        std::process::exit(1); // Stop execution early if filename is missing
+    let target_filename = match target_filename {
+        Some(filename) => filename,
+        None => {
+            println!("Usage: tcodec [FLAGS] <filename.tc>");
+            println!("\nFlags:");
+            println!("  I aint got any yet");
+            std::process::exit(1); // Stop execution early if filename is missing
+        }
+    };
+
+    let file_path = Path::new(target_filename);
+
+    if !file_path.exists() {
+        eprintln!(
+            "[ ERR ] The specified file '{}' does not exist.",
+            file_path.display()
+        );
+        std::process::exit(1);
     }
 
-    let target_filename = &args[1]; // Grab the specified file path string
+    print_info_before(&format!("Getting source code from {}", file_path.display()));
 
-    print_info_before(&format!("Getting source code from {}", target_filename));
-    
     let source_code = fs::read_to_string(target_filename)
-        .unwrap_or_else(|_| panic!("Failed to read the file: {}", target_filename));
+        .unwrap_or_else(|_| panic!("Failed to read the file: {}", file_path.display()));
 
-    print_info_after("Getting source code", None); 
+    print_info_after("Getting source code", None);
 
     let _ = log(&source_code);
 
@@ -59,25 +87,20 @@ fn main() {
     let _ = log(&ast);
 
     print_info_before("Generating Bytecode from AST");
-    
+
     let (bytecode, user_functions) = Generator::compile(&ast);
 
     print_info_after("Generating Bytecode from AST", None);
-    
+
     let _ = log(&bytecode);
 
     let native_functions = nativefns::get_native_registry();
-    let native_methods = nativemthds::get_native_method_registry(); 
-
+    let native_methods = nativemthds::get_native_method_registry();
 
     println!("Executing program...");
     // pass the registry map straight into the Interpreter
-    let mut interpreter = Interpreter::new(
-        bytecode,
-        native_functions, 
-        native_methods,
-        user_functions,
-    );
+    let mut interpreter =
+        Interpreter::new(bytecode, native_functions, native_methods, user_functions);
 
     if let Some(&main_address) = interpreter.user_functions.get("main") {
         interpreter.ip = main_address; // makes the VM start at 'main' function
@@ -85,7 +108,18 @@ fn main() {
         panic!("Runtime Error: No 'main' function was found in the compiled TCode program.");
     }
 
-    interpreter.run();
+    match interpreter.run() {
+        Ok(_) => println!("[ OK! ] Program execution completed successfully."),
+
+        Err(error_message) => {
+            let span = interpreter.current_span;
+            eprintln!(
+                "\x1B[1;31mRuntime Error [Line {}, Col {}]:\x1B[0m {}",
+                span.line, span.column, error_message
+            );
+            std::process::exit(1);
+        }
+    }
 }
 
 fn print_info_before(process: &str) {
@@ -101,16 +135,15 @@ fn print_info_after(process: &str, error: Option<std::io::Error>) {
 
         None => println!("[ OK! ] {process} DONE!   "),
     };
-    
+
     std::io::stdout().flush().unwrap(); // updates terminal to show edited lines
 }
 
 use std::fs::File;
-use std::io::Write;
 use std::fs::OpenOptions;
+use std::io::Write;
 
 fn log<T: std::fmt::Debug>(content: &T) -> std::io::Result<()> {
-
     let mut file = OpenOptions::new()
         .append(true) // Sets append mode
         .open(".log")?;

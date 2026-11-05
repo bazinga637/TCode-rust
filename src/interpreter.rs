@@ -1,18 +1,19 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::collections::HashMap;
 use crate::generator::OpCode;
+use crate::lexer::Span;
 use crate::nativefns::NativeFn;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
 
 pub struct Interpreter {
     bytecode: Vec<OpCode>,
     pub ip: usize,
     stack: Vec<RuntimeValue>,
-    frames: Vec<CallFrame>, 
-    natives: HashMap<String, NativeFn>, 
-    native_methods: HashMap<String, crate::nativemthds::NativeMethodFn>, 
-    // 🌟 Added: Map function names to their bytecode entry addresses
-    pub user_functions: HashMap<String, usize>, 
+    frames: Vec<CallFrame>,
+    natives: HashMap<String, NativeFn>,
+    native_methods: HashMap<String, crate::nativemthds::NativeMethodFn>,
+    pub user_functions: HashMap<String, usize>,
+    pub current_span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -20,8 +21,9 @@ pub enum RuntimeValue {
     Number(f64),
     String(String),
     Boolean(bool),
-    Array(Rc<RefCell<Vec<RuntimeValue>>>), // Note: For a true borrow checker, you will later want Std::Rc<RefCell<Vec<RuntimeValue>>>
+    Array(Rc<RefCell<Vec<RuntimeValue>>>),
     Nil,
+    Error(String),
 }
 
 #[derive(Debug, Clone)]
@@ -30,12 +32,23 @@ struct CallFrame {
     locals: Vec<RuntimeValue>,
 }
 
+// turns any list of printable arguments into a RuntimeValue::Error()
+macro_rules! error {
+    ($first:expr $(, $extra:expr)* $(,)?) => {{
+        let err = $first.to_string();
+        $(
+            let err = format!("{}{}", err, $extra);
+        )*
+        Err(err)
+        }};
+}
+
 impl Interpreter {
     pub fn new(
-        bytecode: Vec<OpCode>, 
+        bytecode: Vec<OpCode>,
         natives: HashMap<String, NativeFn>,
-        native_methods: HashMap<String, crate::nativemthds::NativeMethodFn>, 
-        user_functions: HashMap<String, usize>
+        native_methods: HashMap<String, crate::nativemthds::NativeMethodFn>,
+        user_functions: HashMap<String, usize>,
     ) -> Self {
         let global_frame = CallFrame {
             return_address: 0,
@@ -48,60 +61,88 @@ impl Interpreter {
             stack: Vec::new(),
             frames: vec![global_frame],
             natives,
-            native_methods, 
+            native_methods,
             user_functions,
+            current_span: Span { line: 1, column: 1 },
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Result<(), String> {
         while self.ip < self.bytecode.len() {
             let op = self.bytecode[self.ip].clone();
             self.ip += 1;
 
             match op {
+                OpCode::LineUpdate(span) => self.current_span = span,
+
                 OpCode::PushNumber(n) => self.stack.push(RuntimeValue::Number(n)),
                 OpCode::PushString(s) => self.stack.push(RuntimeValue::String(s)),
                 OpCode::PushBoolean(b) => self.stack.push(RuntimeValue::Boolean(b)),
                 OpCode::PushNil => self.stack.push(RuntimeValue::Nil),
-                
+
                 OpCode::GetLocal(slot) => {
-                    let current_frame = self.frames.last().expect("VM Error: No active frame");
+                    let current_frame = self
+                        .frames
+                        .last()
+                        .ok_or("Interpreter Error: No active frame")?;
                     let val = current_frame.locals[slot].clone();
                     self.stack.push(val);
                 }
 
                 OpCode::SetLocal(slot) => {
-                    let val = self.stack.pop().expect("VM Error: SetLocal stack underflow");
-                    let current_frame = self.frames.last_mut().expect("VM Error: No active frame");
+                    let val = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: SetLocal stack underflow")?;
+                    let current_frame =
+                        self.frames.last_mut().ok_or("VM Error: No active frame")?;
                     current_frame.locals[slot] = val;
                 }
-                
+
                 OpCode::Pop => {
-                    self.stack.pop().expect("VM Error: Pop stack underflow");
+                    self.stack
+                        .pop()
+                        .ok_or("Interpreter Error: Pop stack underflow")?;
                 }
 
                 OpCode::Negate => {
-                    let val = self.stack.pop().expect("VM Error: Negate operand missing");
+                    let val = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Negate operand missing")?;
                     if let RuntimeValue::Number(n) = val {
                         self.stack.push(RuntimeValue::Number(-n));
                     } else {
-                        panic!("Runtime Error: Negation (-) can only be applied to numeric type values.");
+                        return error!(
+                            "Runtime Error: Negation (-) can only be applied to numeric type values.",
+                        );
                     }
                 }
 
                 OpCode::Not => {
-                    let val = self.stack.pop().expect("VM Error: Not operand missing");
+                    let val = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Not operand missing")?;
                     if let RuntimeValue::Boolean(b) = val {
                         self.stack.push(RuntimeValue::Boolean(!b));
                     } else {
-                        panic!("Runtime Error: Logical NOT (!) can only be applied to boolean type values.");
+                        return error!(
+                            "Runtime Error: Logical NOT (!) can only be applied to boolean type values.",
+                        );
                     }
                 }
-                
+
                 OpCode::Add => {
-                    let r = self.stack.pop().expect("VM Error: Add right operand missing");
-                    let l = self.stack.pop().expect("VM Error: Add left operand missing");
-                    
+                    let r = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Add right operand missing")?;
+                    let l = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Add left operand missing")?;
+
                     match (l, r) {
                         (RuntimeValue::Number(a), RuntimeValue::Number(b)) => {
                             self.stack.push(RuntimeValue::Number(a + b));
@@ -110,11 +151,14 @@ impl Interpreter {
                             a.push_str(&b);
                             self.stack.push(RuntimeValue::String(a));
                         }
-                        _ => panic!("Runtime Error: Invalid operand types profile for binary addition (+) operation."),
+                        _ => {
+                            return error!(
+                                "Runtime Error: Invalid operand types profile for binary addition (+) operation.",
+                            );
+                        }
                     }
                 }
 
-                
                 OpCode::Sub => {
                     let r = self.stack.pop().unwrap();
                     let l = self.stack.pop().unwrap();
@@ -135,7 +179,9 @@ impl Interpreter {
                     let r = self.stack.pop().unwrap();
                     let l = self.stack.pop().unwrap();
                     if let (RuntimeValue::Number(a), RuntimeValue::Number(b)) = (l, r) {
-                        if b == 0.0 { panic!("Runtime Error: Division by zero"); }
+                        if b == 0.0 {
+                            return error!("Runtime Error: Division by zero");
+                        }
                         self.stack.push(RuntimeValue::Number(a / b));
                     }
                 }
@@ -157,15 +203,65 @@ impl Interpreter {
                 }
 
                 OpCode::Equal => {
-                    let r = self.stack.pop().expect("VM Error: Equal right operand missing");
-                    let l = self.stack.pop().expect("VM Error: Equal left operand missing");
+                    let r = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Equal right operand missing")?;
+                    let l = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Equal left operand missing")?;
                     self.stack.push(RuntimeValue::Boolean(l == r));
                 }
 
                 OpCode::NotEqual => {
-                    let r = self.stack.pop().expect("VM Error: NotEqual right operand missing");
-                    let l = self.stack.pop().expect("VM Error: NotEqual left operand missing");
+                    let r = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: NotEqual right operand missing")?;
+                    let l = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: NotEqual left operand missing")?;
                     self.stack.push(RuntimeValue::Boolean(l != r));
+                }
+
+                OpCode::And => {
+                    let r = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: And right operand missing")?;
+                    let l = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: And left operand missing")?;
+
+                    if let (RuntimeValue::Boolean(a), RuntimeValue::Boolean(b)) = (l, r) {
+                        self.stack.push(RuntimeValue::Boolean(a && b));
+                    } else {
+                        return error!(
+                            "Runtime Error: AND (&&) can only be applied to boolean values.",
+                        );
+                    }
+                }
+
+                OpCode::Or => {
+                    let r = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Or right operand missing")?;
+                    let l = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Or left operand missing")?;
+
+                    if let (RuntimeValue::Boolean(a), RuntimeValue::Boolean(b)) = (l, r) {
+                        self.stack.push(RuntimeValue::Boolean(a && b));
+                    } else {
+                        return error!(
+                            "Runtime Error: OR (||) can only be applied to boolean values.",
+                        );
+                    }
                 }
 
                 OpCode::BuildArray(count) => {
@@ -173,37 +269,47 @@ impl Interpreter {
                     for _ in 0..count {
                         items.push(self.stack.pop().unwrap());
                     }
-                    items.reverse(); 
-                    
+                    items.reverse();
                     // Wrap the generated vec in Rc::new(RefCell::new(...))
-                    self.stack.push(RuntimeValue::Array(Rc::new(RefCell::new(items))));
+                    self.stack
+                        .push(RuntimeValue::Array(Rc::new(RefCell::new(items))));
                 }
 
                 OpCode::CallMethod { name, arg_count } => {
-                    // 1. Pop the arguments sitting on TOP of the stack first
                     let mut args = Vec::new();
                     for _ in 0..arg_count {
-                        args.push(self.stack.pop().expect("VM Error: Missing argument for method call"));
+                        args.push(
+                            self.stack
+                                .pop()
+                                .ok_or("Interpreter Error: Missing argument for method call")?,
+                        );
                     }
-                    args.reverse(); 
+                    args.reverse();
 
-                    // 2. NOW the object context is sitting at the top of the stack. Pop it!
-                    let obj = self.stack.pop().expect("VM Error: Missing object context");
+                    let obj = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Missing object context")?;
 
                     if let Some(method_fn) = self.native_methods.get(&name) {
                         let result = method_fn(&obj, &args);
-                        self.stack.push(result); 
+                        self.stack.push(result);
                     } else {
-                        panic!("Runtime Error: Undefined method or type profile mismatch for '.{}()'", name);
+                        return error!(
+                            "Runtime Error: Undefined method or type profile mismatch for this object instance",
+                        );
                     }
                 }
-                
+
                 OpCode::Jump(target) => {
                     self.ip = target;
                 }
-                
+
                 OpCode::JumpIfFalse(target) => {
-                    let condition = self.stack.pop().expect("VM Error: Missing jump condition");
+                    let condition = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Missing jump condition")?;
                     if let RuntimeValue::Boolean(false) = condition {
                         self.ip = target;
                     }
@@ -212,23 +318,34 @@ impl Interpreter {
                 OpCode::CallFunction { name, arg_count } => {
                     if let Some(native_fn) = self.natives.get(&name) {
                         let mut args = Vec::new();
-                        for _ in 0..arg_count { args.push(self.stack.pop().unwrap()); }
+                        for _ in 0..arg_count {
+                            args.push(self.stack.pop().unwrap());
+                        }
                         args.reverse();
                         let result = native_fn(&args);
                         self.stack.push(result);
                     } else {
-                        let function_entry_address = *self.user_functions.get(&name)
-                            .unwrap_or_else(|| panic!("Runtime Error: Undefined function '{}'", name));
+                        let function_entry_address = match self.user_functions.get(&name) {
+                            Some(&addr) => addr,
+                            None => {
+                                return error!(
+                                    "Runtime Error: Attempted to call an undefined function target",
+                                );
+                            }
+                        };
 
                         let mut local_workspace = vec![RuntimeValue::Nil; 256];
-                        
+
                         // Ensure right-to-left popping places the first parameter at index 0
                         for i in (0..arg_count).rev() {
-                            local_workspace[i] = self.stack.pop().expect("VM Error: Missing function argument");
+                            local_workspace[i] = self
+                                .stack
+                                .pop()
+                                .ok_or("Interpreter Error: Missing function argument")?;
                         }
 
                         let new_frame = CallFrame {
-                            return_address: self.ip, 
+                            return_address: self.ip,
                             locals: local_workspace,
                         };
 
@@ -242,11 +359,17 @@ impl Interpreter {
                         break; // End execution if we return out of the main script file scope
                     }
                     // Grab the computed return value (or the placeholder Nil) off the top of the stack
-                    let return_value = self.stack.pop().expect("VM Error: Return statement stack underflow");
+                    let return_value = self
+                        .stack
+                        .pop()
+                        .ok_or("Interpreter Error: Return statement stack underflow")?;
 
                     // Pop the completed function frame off our call stack to restore the caller's layout
-                    let completed_frame = self.frames.pop().expect("VM Error: Frame stack underflow");
-                    
+                    let completed_frame = self
+                        .frames
+                        .pop()
+                        .ok_or("Interpreter Error: Frame stack underflow")?;
+
                     // Teleport our instruction pointer back to exactly where the caller left off
                     self.ip = completed_frame.return_address;
 
@@ -254,6 +377,12 @@ impl Interpreter {
                     self.stack.push(return_value);
                 }
             }
+            if let Some(RuntimeValue::Error(_)) = self.stack.last() {
+                if let Some(RuntimeValue::Error(msg)) = self.stack.pop() {
+                    return Err(msg); // Exits the interpreter loop cleanly with custom message
+                }
+            }
         }
+        Ok(())
     }
 }
